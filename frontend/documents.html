@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents - Barangay 853</title>
+    <link rel="stylesheet" href="styles_css.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <div class="logo-placeholder"></div>
+                <span class="brand-name">Barangay 853</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="landing_page.html">Home</a></li>
+                <li><a href="documents.html" class="active">Documents</a></li>
+                <li><a href="announcements.html">Announcements</a></li>
+                <li><a href="report.html">Report</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="login.html" class="btn-login">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Document Services</h1>
+            <p>Request and manage your barangay documents online</p>
+        </div>
+    </section>
+
+    <!-- Available Documents Section -->
+    <section class="documents-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Available Documents</h2>
+                <a href="login.html" class="btn primary">Request a Document</a>
+            </div>
+
+            <!-- Barangay Clearances -->
+            <div class="document-category">
+                <h3>Barangay Clearances</h3>
+                <div class="document-grid">
+                    <div class="document-card">
+                        <div class="document-icon">📄</div>
+                        <h4>Barangay Clearance</h4>
+                        <p>Required for employment, business permits, and other legal purposes</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('clearance-requirements')">View Requirements</button>
+                            <a href="login.html" class="btn secondary">Apply Now</a>
+                        </div>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">🏪</div>
+                        <h4>Business Clearance</h4>
+                        <p>Needed for business registration and renewal</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('business-requirements')">View Requirements</button>
+                            <a href="login.html" class="btn secondary">Apply Now</a>
+                        </div>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">🏗️</div>
+                        <h4>Construction Clearance</h4>
+                        <p>Required before starting any construction project</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('construction-requirements')">View Requirements</button>
+                            <a href="login.html" class="btn secondary">Apply Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificates and Endorsements -->
+            <div class="document-category">
+                <h3>Certificates and Endorsements</h3>
+                <div class="document-grid">
+                    <div class="document-card">
+                        <div class="document-icon">🏠</div>
+                        <h4>Certificate of Residency</h4>
+                        <p>Proof of residence within the barangay</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('residency-requirements')">Learn More</button>
+                            <a href="login.html" class="btn secondary">Request Certificate</a>
+                        </div>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">💰</div>
+                        <h4>Certificate of Indigency</h4>
+                        <p>For financial assistance and medical purposes</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('indigency-requirements')">Learn More</button>
+                            <a href="login.html" class="btn secondary">Request Certificate</a>
+                        </div>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">👥</div>
+                        <h4>Good Moral Certificate</h4>
+                        <p>Character reference for employment or school</p>
+                        <div class="document-actions">
+                            <button class="btn primary" onclick="openModal('moral-requirements')">Learn More</button>
+                            <a href="login.html" class="btn secondary">Request Certificate</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frequently Requested Documents -->
+            <div class="document-category">
+                <h3>Frequently Requested Documents</h3>
+                <div class="document-grid">
+                    <div class="document-card">
+                        <div class="document-icon">🆔</div>
+                        <h4>Barangay ID</h4>
+                        <p>Official identification for residents</p>
+                        <a href="login.html" class="btn primary">Request Now</a>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">📋</div>
+                        <h4>Community Tax Certificate (Cedula)</h4>
+                        <p>Annual tax certificate for residents</p>
+                        <a href="login.html" class="btn primary">Request Now</a>
+                    </div>
+                    <div class="document-card">
+                        <div class="document-icon">📑</div>
+                        <h4>First-Time Jobseeker Certificate</h4>
+                        <p>For first-time employment seekers</p>
+                        <a href="login.html" class="btn primary">Request Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Requirements Modal -->
+    <div id="requirements-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3 id="modal-title">Document Requirements</h3>
+            <div id="modal-content" class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeModal()">Close</button>
+                <a href="login.html" class="btn primary">Apply Now</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Barangay 853</h4>
+                    <p>Serving the community with dedication and transparency</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="landing_page.html">Home</a></li>
+                        <li><a href="documents.html">Documents</a></li>
+                        <li><a href="announcements.html">Announcements</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <p>Email: barangay853@example.com</p>
+                    <p>Phone: (02) 1234-5678</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Barangay 853. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Requirements data
+        const requirements = {
+            'clearance-requirements': {
+                title: 'Barangay Clearance Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>Valid ID (Government-issued)</li>
+                        <li>Barangay Residency Certificate or Proof of Address</li>
+                        <li>1x1 ID Picture (2 copies)</li>
+                        <li>Cedula or Community Tax Certificate</li>
+                        <li>Processing Fee: ₱50.00</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 3-5 working days</p>
+                `
+            },
+            'business-requirements': {
+                title: 'Business Clearance Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>DTI/SEC Registration</li>
+                        <li>Valid ID of Business Owner</li>
+                        <li>Proof of Business Location</li>
+                        <li>Barangay Clearance (Personal)</li>
+                        <li>Processing Fee: ₱200.00</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 5-7 working days</p>
+                `
+            },
+            'construction-requirements': {
+                title: 'Construction Clearance Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>Building Permit from City Hall</li>
+                        <li>Approved Building Plans</li>
+                        <li>Valid ID of Property Owner</li>
+                        <li>Land Title or Tax Declaration</li>
+                        <li>Processing Fee: ₱500.00</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 7-10 working days</p>
+                `
+            },
+            'residency-requirements': {
+                title: 'Certificate of Residency Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>Valid ID (Government-issued)</li>
+                        <li>Proof of Address (Utility Bill, Lease Contract)</li>
+                        <li>1x1 ID Picture (1 copy)</li>
+                        <li>Processing Fee: ₱30.00</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 2-3 working days</p>
+                `
+            },
+            'indigency-requirements': {
+                title: 'Certificate of Indigency Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>Valid ID</li>
+                        <li>Proof of Income (if employed)</li>
+                        <li>Medical Certificate (if for medical assistance)</li>
+                        <li>Barangay Clearance</li>
+                        <li>Processing Fee: Free</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 3-5 working days</p>
+                `
+            },
+            'moral-requirements': {
+                title: 'Good Moral Certificate Requirements',
+                content: `
+                    <ul class="requirements-list">
+                        <li>Valid ID</li>
+                        <li>Barangay Clearance</li>
+                        <li>1x1 ID Picture (1 copy)</li>
+                        <li>Letter of Request stating purpose</li>
+                        <li>Processing Fee: ₱50.00</li>
+                    </ul>
+                    <p><strong>Processing Time:</strong> 3-5 working days</p>
+                `
+            }
+        };
+
+        function openModal(type) {
+            const modal = document.getElementById('requirements-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            if (requirements[type]) {
+                title.textContent = requirements[type].title;
+                content.innerHTML = requirements[type].content;
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('requirements-modal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('requirements-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+    <script src="main_script.js"></script>
+</body>
+</html>

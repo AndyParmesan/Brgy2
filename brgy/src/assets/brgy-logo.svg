@@ -1,0 +1,33 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <path id="topText" d="M32 128a96 96 0 0 1 192 0" fill="none" />
+    <path id="bottomText" d="M224 128a96 96 0 0 1-192 0" fill="none" />
+  </defs>
+  <circle cx="128" cy="128" r="120" fill="#fff" />
+  <g fill="#facc15">
+    <rect x="122" y="8" width="12" height="32" rx="6" />
+    <rect x="122" y="216" width="12" height="32" rx="6" />
+    <rect x="216" y="122" width="32" height="12" rx="6" />
+    <rect x="8" y="122" width="32" height="12" rx="6" />
+    <rect x="196" y="40" width="12" height="32" rx="6" transform="rotate(45 202 56)" />
+    <rect x="196" y="184" width="12" height="32" rx="6" transform="rotate(-45 202 200)" />
+    <rect x="48" y="184" width="12" height="32" rx="6" transform="rotate(45 54 200)" />
+    <rect x="48" y="40" width="12" height="32" rx="6" transform="rotate(-45 54 56)" />
+  </g>
+  <circle cx="128" cy="128" r="88" fill="#facc15" />
+  <path d="M128 44c-46 0-84 38-84 84s38 84 84 84 84-38 84-84-38-84-84-84zm-4 0v168" fill="#facc15" />
+  <path d="M128 60c-38 0-68 30-68 68s30 68 68 68z" fill="#114fa3" />
+  <path d="M128 60c38 0 68 30 68 68s-30 68-68 68z" fill="#d92f2f" />
+  <path
+    d="M128 65c-14 0-26 17-26 63s12 63 26 63 26-17 26-63-12-63-26-63zm-13 20c4-7 8-9 13-9s9 2 13 9zm0 96c-4-7-6-18-6-33s2-26 6-33h26c4 7 6 18 6 33s-2 26-6 33z"
+    fill="#fff"
+  />
+  <circle cx="128" cy="128" r="80" fill="none" stroke="#fff" stroke-width="8" />
+  <text font-size="14" font-family="Segoe UI, Arial, sans-serif" letter-spacing="2" fill="#1f2937">
+    <textPath xlink:href="#topText" startOffset="5%">BRGY. 853 ZONE 93</textPath>
+  </text>
+  <text font-size="12" font-family="Segoe UI, Arial, sans-serif" letter-spacing="2" fill="#1f2937">
+    <textPath xlink:href="#bottomText" startOffset="10%">TULONG - TULONG SAMA - SAMA</textPath>
+  </text>
+</svg>
+
