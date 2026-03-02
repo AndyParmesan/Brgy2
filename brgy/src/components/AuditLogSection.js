@@ -344,4 +344,3 @@ const AuditLogSection = ({ authToken }) => {
 };
 
 export default AuditLogSection;
-

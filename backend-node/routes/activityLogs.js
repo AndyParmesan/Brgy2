@@ -7,7 +7,11 @@ const authenticateToken = authRoutes.authenticateToken;
 // Protected: Get activity logs (audit log)
 router.get('/activity-logs', authenticateToken, async (req, res) => {
   try {
-    const { limit = 50, module, actor, dateFrom, dateTo } = req.query;
+    // Parse limit FIRST as a safe integer - embed directly in SQL
+    // to avoid mysql2 prepared statement type issues with LIMIT ?
+    const limitNum = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 1000);
+
+    const { module, actor, dateFrom, dateTo } = req.query;
     let sql = 'SELECT * FROM activity_logs WHERE 1=1';
     const params = [];
 
@@ -31,13 +35,16 @@ router.get('/activity-logs', authenticateToken, async (req, res) => {
       params.push(dateTo);
     }
 
-    sql += ' ORDER BY logged_at DESC, created_at DESC LIMIT ?';
-    params.push(parseInt(limit));
+    // Embed limitNum directly as a literal - NOT as a ? parameter
+    // This is safe because limitNum is always a validated integer (never user string)
+    sql += ` ORDER BY logged_at DESC, created_at DESC LIMIT ${limitNum}`;
 
     const logs = await query(sql, params);
     res.json(logs);
   } catch (error) {
     console.error('Get activity logs error:', error);
+    console.error('  errno:', error.errno, '| code:', error.code);
+    console.error('  sqlMessage:', error.sqlMessage);
     res.status(500).json({ error: 'Failed to fetch activity logs' });
   }
 });

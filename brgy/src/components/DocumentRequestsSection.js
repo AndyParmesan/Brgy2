@@ -270,4 +270,3 @@ const DocumentRequestsSection = ({ authToken }) => {
 };
 
 export default DocumentRequestsSection;
-
