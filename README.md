@@ -34,7 +34,13 @@ To Stop the System
 Press Ctrl + C in both terminals
 Stop MySQL in XAMPP
 
+
+
+
+
 Updated Features April 04,2026
+
+
 Unified Search Engine: A centralized tool for instantly retrieving information across all data categories within the system.
 
 Dynamic Data Visualization: Interactive charts that provide live insights into demographic trends and service performance metrics.
