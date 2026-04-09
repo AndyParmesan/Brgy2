@@ -82,6 +82,7 @@ const Navigation = ({ user: propUser, onLogout: propOnLogout }) => {
           <li><Link to="/announcements" className={isActive('/announcements')}>Announcements</Link></li>
           <li><Link to="/report" className={isActive('/report')}>Report</Link></li>
           <li><Link to="/about" className={isActive('/about')}>About</Link></li>
+          <li><Link to="/track" className={isActive('/track')}>Track Request</Link></li>
           {isAuthenticated ? (
             <li className="nav-user-menu">
               <div className="user-avatar-nav" onClick={handleAvatarClick} title="Go to Dashboard">

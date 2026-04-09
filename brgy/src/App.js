@@ -10,6 +10,7 @@ import Documents from './pages/Documents';
 import Report from './pages/Report';
 import ResidentDashboard from './pages/ResidentDashboard';
 import UserProfile from './pages/UserProfile';
+import TrackRequest from './pages/TrackRequest';
 import { useSessionTimeout } from './hooks/useSessionTimeout';
 import DocumentRequestsSection from './components/DocumentRequestsSection';
 import BlotterManagementSection from './components/BlotterManagementSection';
@@ -18,6 +19,7 @@ import StatisticsSection from './components/StatisticsSection';
 import DashboardOverviewSection from './components/DashboardOverviewSection';
 import AuditLogSection from './components/AuditLogSection';
 import NotificationBell from './components/NotificationBell';
+
 
 const quickActions = [
   { id: 'resident', label: 'Add Resident', accent: '#2563eb' },
@@ -1445,7 +1447,7 @@ function AppContent() {
   };
 
   // Use session timeout hook
-  useSessionTimeout(handleSessionTimeout);
+  const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout);
 
   // Check for existing authentication on mount
   useEffect(() => {
@@ -2097,12 +2099,36 @@ function AppContent() {
 
   return (
     <BrowserRouter>
+      {/* Session Timeout Warning Banner */}
+      {isAuthenticated && showWarning && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, background: '#ef4444', color: 'white',
+          padding: '1rem', textAlign: 'center', zIndex: 99999, display: 'flex',
+          justifyContent: 'center', alignItems: 'center', gap: '1rem',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}>
+          <span>
+            ⚠️ Your session will expire in <strong>{Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}</strong> due to inactivity.
+          </span>
+          <button 
+            onClick={resetTimer}
+            style={{
+              background: 'white', color: '#ef4444', border: 'none', padding: '0.5rem 1rem',
+              borderRadius: '0.25rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
+            }}
+          >
+            Continue Session
+          </button>
+        </div>
+      )}
+
       <Routes>
         <Route path="/" element={<LandingPage user={user} onLogout={handleLogout} />} />
         <Route path="/about" element={<About />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/report" element={<Report />} />
+        <Route path="/track" element={<TrackRequest />} /> 
         <Route
           path="/login"
           element={

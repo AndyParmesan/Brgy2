@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { testConnection } = require('./config/database');
+const { testConnection, query } = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -14,6 +14,7 @@ const contactRoutes = require('./routes/contact');
 const residentRoutes = require('./routes/residents');
 const activityLogRoutes = require('./routes/activityLogs');
 const statisticsRoutes = require('./routes/statistics');
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -74,6 +75,41 @@ app.use('/api/public', documentRoutes);
 app.use('/api/public', blotterRoutes);
 app.use('/api/public', contactRoutes);
 
+// ==========================================
+// PUBLIC ROUTES (No Auth Required)
+// ==========================================
+app.get('/api/public/track-document/:id', async (req, res) => {
+  try {
+    const trackingId = req.params.id;
+
+    // We use your exact database columns (reference_no, requester_name, date_filed)
+    // and map them to what the React frontend expects (id, full_name, created_at)
+    const sql = `
+      SELECT 
+        reference_no AS id, 
+        requester_name AS full_name, 
+        document_type, 
+        purpose, 
+        status, 
+        date_filed AS created_at 
+      FROM document_requests 
+      WHERE reference_no = ? OR id = ?
+    `;
+    
+    // Pass trackingId twice so they can search by "DOC-2024-001" or just "1"
+    const results = await query(sql, [trackingId, trackingId]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Request not found or invalid ID.' });
+    }
+
+    res.json({ success: true, request: results[0] });
+  } catch (error) {
+    console.error('Error tracking document:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching tracking info' });
+  }
+});
+
 // Protected routes (authentication required)
 app.use('/api', residentRoutes);
 app.use('/api', announcementRoutes);
@@ -81,6 +117,7 @@ app.use('/api', documentRoutes);
 app.use('/api', blotterRoutes);
 app.use('/api', activityLogRoutes);
 app.use('/api', statisticsRoutes);
+app.use('/api', contactRoutes); 
 
 // 404 handler - Log all unmatched routes for debugging
 // IMPORTANT: This must be AFTER all route registrations
