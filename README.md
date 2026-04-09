@@ -33,3 +33,16 @@ To Stop the System
 
 Press Ctrl + C in both terminals
 Stop MySQL in XAMPP
+
+Updated Features April 04,2026
+Unified Search Engine: A centralized tool for instantly retrieving information across all data categories within the system.
+
+Dynamic Data Visualization: Interactive charts that provide live insights into demographic trends and service performance metrics.
+
+Real-Time Notification System: Automated alerts that keep personnel informed of new requests or urgent filings immediately.
+
+Secure Public Portals: A gateway that allows individuals to track the status of their requests remotely and securely.
+
+Automated Session Security: A feature that protects data by automatically ending inactive user sessions after a defined period.
+
+Local Network Accessibility: A configuration that enables the application to be used across multiple devices on a shared network.
