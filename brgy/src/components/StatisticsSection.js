@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'];
 
 const StatisticsSection = ({ authToken }) => {
   const [stats, setStats] = useState(null);
@@ -60,8 +66,13 @@ const StatisticsSection = ({ authToken }) => {
     );
   }
 
+  // Format data for Recharts
+  const docStatusData = Object.entries(stats.documentRequests.byStatus).map(([name, value]) => ({ name, value }));
+  const blotterStatusData = Object.entries(stats.blotterCases.byStatus).map(([name, value]) => ({ name, value }));
+
   return (
     <>
+      {/* OVERVIEW CARDS */}
       <section className="panel reports-module">
         <header className="panel-heading">
           <div>
@@ -93,110 +104,121 @@ const StatisticsSection = ({ authToken }) => {
         </div>
       </section>
 
+      {/* DOCUMENT REQUESTS CHARTS */}
       <section className="panel">
         <header className="panel-heading">
           <div>
-            <h2>Document Requests Statistics</h2>
-            <p className="muted">Breakdown by status and type</p>
+            <h2>Document Requests Breakdown</h2>
+            <p className="muted">Visualizing request volumes by status and type</p>
           </div>
         </header>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
-          <div>
-            <h3 style={{ marginBottom: '1rem' }}>By Status</h3>
-            <div className="table">
-              <div className="table-row head">
-                <span>Status</span>
-                <span>Count</span>
-              </div>
-              {Object.entries(stats.documentRequests.byStatus).map(([status, count]) => (
-                <div key={status} className="table-row">
-                  <span>{status}</span>
-                  <span>{count}</span>
-                </div>
-              ))}
+          
+          {/* Status Pie Chart */}
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Requests by Status</h3>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={docStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                    {docStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div>
-            <h3 style={{ marginBottom: '1rem' }}>By Document Type</h3>
-            <div className="table">
-              <div className="table-row head">
-                <span>Document Type</span>
-                <span>Count</span>
-              </div>
-              {stats.documentRequests.byType.map((item) => (
-                <div key={item.document_type} className="table-row">
-                  <span>{item.document_type}</span>
-                  <span>{item.count}</span>
-                </div>
-              ))}
+
+          {/* Type Bar Chart */}
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Requests by Document Type</h3>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <BarChart data={stats.documentRequests.byType} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="document_type" tick={{fontSize: 12}} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip cursor={{fill: 'rgba(0,0,0,0.05)'}} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Volume" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
       </section>
 
+      {/* BLOTTER CASES CHARTS */}
       <section className="panel">
         <header className="panel-heading">
           <div>
-            <h2>Blotter Cases Statistics</h2>
-            <p className="muted">Breakdown by status and category</p>
+            <h2>Blotter Cases Breakdown</h2>
+            <p className="muted">Visualizing dispute records by status and category</p>
           </div>
         </header>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
-          <div>
-            <h3 style={{ marginBottom: '1rem' }}>By Status</h3>
-            <div className="table">
-              <div className="table-row head">
-                <span>Status</span>
-                <span>Count</span>
-              </div>
-              {Object.entries(stats.blotterCases.byStatus).map(([status, count]) => (
-                <div key={status} className="table-row">
-                  <span>{status}</span>
-                  <span>{count}</span>
-                </div>
-              ))}
+          
+          {/* Status Pie Chart */}
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Cases by Status</h3>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={blotterStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                    {blotterStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div>
-            <h3 style={{ marginBottom: '1rem' }}>By Category</h3>
-            <div className="table">
-              <div className="table-row head">
-                <span>Category</span>
-                <span>Count</span>
-              </div>
-              {stats.blotterCases.byCategory.map((item) => (
-                <div key={item.category} className="table-row">
-                  <span>{item.category}</span>
-                  <span>{item.count}</span>
-                </div>
-              ))}
+
+          {/* Category Bar Chart */}
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Cases by Category</h3>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <BarChart data={stats.blotterCases.byCategory} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="category" tick={{fontSize: 12}} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip cursor={{fill: 'rgba(0,0,0,0.05)'}} />
+                  <Bar dataKey="count" fill="#ef4444" radius={[4, 4, 0, 0]} name="Cases" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
       </section>
 
+      {/* TRENDS */}
       <section className="panel trend-module">
         <header className="panel-heading">
           <div>
             <h2>Recent Activity (Last 7 Days)</h2>
-            <p className="muted">New entries in the past week</p>
+            <p className="muted">New entries processed in the past week</p>
           </div>
         </header>
         <div className="reports-grid" style={{ marginTop: '1.5rem' }}>
-          <article className="report-card">
+          <article className="report-card" style={{ borderTop: '4px solid #3b82f6' }}>
             <p className="stat-label">New Documents</p>
             <p className="stat-value">{stats.documentRequests.recent}</p>
-            <p className="muted">Last 7 days</p>
+            <p className="muted">Filed in last 7 days</p>
           </article>
-          <article className="report-card">
+          <article className="report-card" style={{ borderTop: '4px solid #ef4444' }}>
             <p className="stat-label">New Blotters</p>
             <p className="stat-value">{stats.blotterCases.recent}</p>
-            <p className="muted">Last 7 days</p>
+            <p className="muted">Filed in last 7 days</p>
           </article>
-          <article className="report-card">
+          <article className="report-card" style={{ borderTop: '4px solid #10b981' }}>
             <p className="stat-label">New Residents</p>
             <p className="stat-value">{stats.residents.recent}</p>
-            <p className="muted">Last 7 days</p>
+            <p className="muted">Registered in last 7 days</p>
           </article>
         </div>
       </section>
@@ -205,4 +227,3 @@ const StatisticsSection = ({ authToken }) => {
 };
 
 export default StatisticsSection;
-

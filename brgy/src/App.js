@@ -19,6 +19,7 @@ import StatisticsSection from './components/StatisticsSection';
 import DashboardOverviewSection from './components/DashboardOverviewSection';
 import AuditLogSection from './components/AuditLogSection';
 import NotificationBell from './components/NotificationBell';
+import GlobalSearch from './components/GlobalSearch'; 
 
 
 const quickActions = [
@@ -1642,57 +1643,6 @@ function AppContent() {
   // Dashboard component (protected route)
   const DashboardContent = () => {
     const navigate = useNavigate();
-    const [globalSearch, setGlobalSearch] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [searchLoading, setSearchLoading] = useState(false);
-    const searchRef = useRef(null);
-
-    const handleGlobalSearch = async (term) => {
-      if (!term.trim()) return;
-      setSearchLoading(true);
-      try {
-        const headers = { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' };
-        const [residentsRes, docsRes, blotterRes] = await Promise.all([
-          fetch(`http://127.0.0.1:3001/api/residents?search=${encodeURIComponent(term)}`, { headers }),
-          fetch(`http://127.0.0.1:3001/api/document-requests?search=${encodeURIComponent(term)}`, { headers }),
-          fetch(`http://127.0.0.1:3001/api/blotter-cases?search=${encodeURIComponent(term)}`, { headers }),
-        ]);
-        const results = [];
-        if (residentsRes.ok) {
-          const data = await residentsRes.json();
-          (Array.isArray(data) ? data : []).slice(0, 3).forEach(r =>
-            results.push({ type: 'Resident', label: r.full_name, sub: r.address || r.zone || '', nav: 'Resident Management' })
-          );
-        }
-        if (docsRes.ok) {
-          const data = await docsRes.json();
-          (Array.isArray(data) ? data : []).slice(0, 3).forEach(r =>
-            results.push({ type: 'Document', label: r.requester_name, sub: `${r.document_type} · ${r.status}`, nav: 'Document Requests' })
-          );
-        }
-        if (blotterRes.ok) {
-          const data = await blotterRes.json();
-          (Array.isArray(data) ? data : []).slice(0, 3).forEach(r =>
-            results.push({ type: 'Blotter', label: r.complainant_name || r.case_no, sub: r.status || '', nav: 'Blotter & Disputes' })
-          );
-        }
-        setSearchResults(results);
-      } catch (err) {
-        console.error('Global search error:', err);
-      } finally {
-        setSearchLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      const handler = (e) => {
-        if (searchRef.current && !searchRef.current.contains(e.target)) {
-          setSearchResults([]);
-        }
-      };
-      document.addEventListener('mousedown', handler);
-      return () => document.removeEventListener('mousedown', handler);
-    }, []);
 
     const handleLogoutWithNavigate = async () => {
       await handleLogout();
@@ -1731,68 +1681,9 @@ function AppContent() {
 
       <main className="main-panel">
         <header className="top-bar">
-          <div className="search-box top-search" ref={searchRef} style={{ position: 'relative' }}>
-            <input
-              type="search"
-              placeholder="Search residents, blotters, etc."
-              value={globalSearch}
-              onChange={(e) => {
-                setGlobalSearch(e.target.value);
-                if (!e.target.value.trim()) setSearchResults([]);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && globalSearch.trim()) {
-                  handleGlobalSearch(globalSearch.trim());
-                }
-              }}
-            />
-            {searchLoading && (
-              <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: '#6b7280' }}>
-                Searching...
-              </span>
-            )}
-            {searchResults.length > 0 && (
-              <div style={{
-                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
-                background: '#fff', border: '1px solid #e5e7eb', borderRadius: '0.75rem',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 999, overflow: 'hidden',
-              }}>
-                {searchResults.length === 0 ? (
-                  <div style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem', textAlign: 'center' }}>No results found</div>
-                ) : (
-                  searchResults.map((result, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setActiveNav(result.nav); setGlobalSearch(''); setSearchResults([]); }}
-                      style={{
-                        width: '100%', background: 'none', border: 'none', borderBottom: '1px solid #f3f4f6',
-                        padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
-                        cursor: 'pointer', textAlign: 'left',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      <span style={{
-                        fontSize: '0.7rem', fontWeight: 600, padding: '0.15rem 0.5rem',
-                        borderRadius: '0.25rem', background: result.type === 'Resident' ? '#dbeafe' : result.type === 'Document' ? '#dcfce7' : '#fef9c3',
-                        color: result.type === 'Resident' ? '#1e40af' : result.type === 'Document' ? '#166534' : '#854d0e',
-                        flexShrink: 0,
-                      }}>
-                        {result.type}
-                      </span>
-                      <span>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{result.label}</div>
-                        {result.sub && <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{result.sub}</div>}
-                      </span>
-                    </button>
-                  ))
-                )}
-                <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', color: '#9ca3af', borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
-                  {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} — click to navigate
-                </div>
-              </div>
-            )}
-          </div>
+          
+          <GlobalSearch authToken={authToken} />
+
           <div className="header-tools">
             <NotificationBell authToken={authToken} onNavigate={setActiveNav} />
             <div className="profile-chip">
@@ -1817,6 +1708,7 @@ function AppContent() {
             </div>
           </div>
         </header>
+
 
         {activeNav === 'Dashboard' && (
           <DashboardOverviewSection authToken={authToken} />

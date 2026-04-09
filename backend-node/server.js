@@ -119,6 +119,65 @@ app.use('/api', activityLogRoutes);
 app.use('/api', statisticsRoutes);
 app.use('/api', contactRoutes); 
 
+// ==========================================
+// GLOBAL SEARCH ROUTE
+// ==========================================
+app.get('/api/search', async (req, res) => {
+  try {
+    const searchQuery = req.query.q;
+    if (!searchQuery) return res.json({ results: [] });
+
+    // The % wildcard allows us to search for partial matches
+    const searchParam = `%${searchQuery}%`;
+
+    // 1. Search Residents
+    const residents = await query(
+      `SELECT 
+        id, 
+        full_name AS title, 
+        'Resident Profile' AS subtitle, 
+        'Resident' AS type, 
+        'registered' AS status 
+       FROM residents 
+       WHERE full_name LIKE ? LIMIT 3`,
+      [searchParam]
+    );
+
+    // 2. Search Documents
+    const documents = await query(
+      `SELECT 
+        reference_no AS id, 
+        reference_no AS title, 
+        document_type AS subtitle, 
+        'Document' AS type, 
+        status 
+       FROM document_requests 
+       WHERE reference_no LIKE ? OR requester_name LIKE ? LIMIT 3`,
+      [searchParam, searchParam]
+    );
+
+    // 3. Search Blotters (FIXED DATABASE COLUMNS HERE)
+    const blotters = await query(
+      `SELECT 
+        case_no AS id, 
+        case_no AS title, 
+        category AS subtitle, 
+        'Blotter' AS type, 
+        status 
+       FROM blotter_cases 
+       WHERE case_no LIKE ? OR reporter_name LIKE ? OR persons_involved LIKE ? LIMIT 3`,
+      [searchParam, searchParam, searchParam]
+    );
+
+    // Combine all results into one array
+    const results = [...residents, ...documents, ...blotters];
+    res.json({ results });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Error performing search' });
+  }
+});
+
 // 404 handler - Log all unmatched routes for debugging
 // IMPORTANT: This must be AFTER all route registrations
 app.use((req, res) => {
