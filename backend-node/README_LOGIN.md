@@ -25,7 +25,7 @@ The login system is now fully connected to the MySQL `users` table. When a user 
 ### Frontend (`LoginModal.js`)
 
 1. **User selects** "Staff/Admin Login"
-2. **Sends request** to `http://127.0.0.1:3001/api/auth/login`
+2. **Sends request** to `/api/auth/login`
 3. **Displays specific error messages**:
    - "Account not found" - Email doesn't exist in database
    - "Incorrect password" - Email exists but password is wrong

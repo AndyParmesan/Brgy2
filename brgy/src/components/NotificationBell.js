@@ -41,9 +41,9 @@ export default function NotificationBell({ authToken, onNavigate }) {
 
       // Run all three fetches in parallel
       const [docsRes, blotterRes, contactRes] = await Promise.allSettled([
-        fetch('http://127.0.0.1:3001/api/document-requests?status=Pending&limit=50', { headers }),
-        fetch('http://127.0.0.1:3001/api/blotter-cases?status=Filed&limit=50', { headers }),
-        fetch('http://127.0.0.1:3001/api/contact-messages?status=Unread&limit=50', { headers }),
+        fetch('/api/document-requests?status=Pending&limit=50', { headers }),
+        fetch('/api/blotter-cases?status=Filed&limit=50', { headers }),
+        fetch('/api/contact-messages?status=Unread&limit=50', { headers }),
       ]);
 
       const items = [];

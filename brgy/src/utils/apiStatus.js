@@ -1,6 +1,6 @@
 // Utility to check API connection status
 
-const API_BASE_URL = 'http://127.0.0.1:3001/api';
+const API_BASE_URL = '/api';
 
 export const checkApiConnection = async () => {
   try {

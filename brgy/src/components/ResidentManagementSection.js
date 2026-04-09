@@ -29,7 +29,7 @@ const ResidentManagementSection = ({ authToken }) => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
 
-      const response = await fetch(`http://127.0.0.1:3001/api/residents?${params}`, {
+      const response = await fetch(`/api/residents?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const ResidentManagementSection = ({ authToken }) => {
 
     try {
       // Create resident in residents table
-      const response = await fetch('http://127.0.0.1:3001/api/residents', {
+      const response = await fetch('/api/residents', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -130,7 +130,7 @@ const ResidentManagementSection = ({ authToken }) => {
 
     try {
       // Delete from residents table
-      const response = await fetch(`http://127.0.0.1:3001/api/residents/${id}`, {
+      const response = await fetch(`/api/residents/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authToken}`,

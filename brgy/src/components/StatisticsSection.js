@@ -19,7 +19,7 @@ const StatisticsSection = ({ authToken }) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://127.0.0.1:3001/api/statistics', {
+      const response = await fetch('/api/statistics', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',

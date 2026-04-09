@@ -1,6 +1,6 @@
 // API helper utility for making authenticated requests
 
-const API_BASE_URL = 'http://127.0.0.1:3001/api';
+const API_BASE_URL = '/api';
 
 /**
  * Get auth token from localStorage

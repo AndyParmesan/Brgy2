@@ -23,7 +23,7 @@ const DocumentRequestsSection = ({ authToken }) => {
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
 
-      const response = await fetch(`http://127.0.0.1:3001/api/document-requests?${params}`, {
+      const response = await fetch(`/api/document-requests?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ const DocumentRequestsSection = ({ authToken }) => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`http://127.0.0.1:3001/api/document-requests/${selectedRequest.id}`, {
+      const response = await fetch(`/api/document-requests/${selectedRequest.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`,

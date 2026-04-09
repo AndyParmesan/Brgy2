@@ -32,7 +32,7 @@ function Login({ onLogin }) {
 
     try {
       // API login - checks users table in database
-      const API_BASE_URL = 'http://127.0.0.1:3001/api';
+      const API_BASE_URL = '/api';
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -136,7 +136,7 @@ function Login({ onLogin }) {
       }
 
       // Register resident
-      const API_BASE_URL = 'http://127.0.0.1:3001/api';
+      const API_BASE_URL = '/api';
       const response = await fetch(`${API_BASE_URL}/public/register`, {
         method: 'POST',
         headers: {

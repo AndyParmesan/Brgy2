@@ -85,7 +85,7 @@ Look at the console output when starting the server. You should see:
 
 ### 3. Test API Endpoint
 ```bash
-curl http://127.0.0.1:3001/api/public/documents
+curl /api/public/documents
 ```
 
 Should return JSON with document types.
@@ -114,7 +114,7 @@ Should return JSON with document types.
 
 1. Start the frontend: `cd ../brgy && npm start`
 2. Test the connection between frontend and backend
-3. All API calls should now go to `http://127.0.0.1:3001/api`
+3. All API calls should now go to `/api`
 
 ## API Endpoints
 

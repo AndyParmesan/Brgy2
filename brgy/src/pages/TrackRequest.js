@@ -19,7 +19,7 @@ const TrackRequest = () => {
 
     try {
       // We will create this public API endpoint next
-      const response = await fetch(`http://127.0.0.1:3001/api/public/track-document/${trackingId}`);
+      const response = await fetch(`/api/public/track-document/${trackingId}`);
       const data = await response.json();
 
       if (response.ok && data.success) {

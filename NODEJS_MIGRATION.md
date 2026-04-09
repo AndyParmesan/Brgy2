@@ -97,7 +97,7 @@ Look for this in console:
 
 ### 3. Test API
 ```bash
-curl http://127.0.0.1:3001/api/public/documents
+curl /api/public/documents
 ```
 
 ### 4. Test Frontend

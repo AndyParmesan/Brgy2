@@ -29,7 +29,7 @@ const BlotterManagementSection = ({ authToken }) => {
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
 
-      const response = await fetch(`http://127.0.0.1:3001/api/blotter-cases?${params}`, {
+      const response = await fetch(`/api/blotter-cases?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ const BlotterManagementSection = ({ authToken }) => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`http://127.0.0.1:3001/api/blotter-cases/${selectedCase.id}`, {
+      const response = await fetch(`/api/blotter-cases/${selectedCase.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`,

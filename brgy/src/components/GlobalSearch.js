@@ -38,7 +38,7 @@ const GlobalSearch = ({ authToken }) => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const response = await fetch(`http://127.0.0.1:3001/api/search?q=${encodeURIComponent(term)}`, {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
       

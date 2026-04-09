@@ -633,7 +633,7 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
 
-      const response = await fetch(`http://127.0.0.1:3001/api/announcements?${params}`, {
+      const response = await fetch(`/api/announcements?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -701,8 +701,8 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
 
     try {
       const url = selectedAnnouncement
-        ? `http://127.0.0.1:3001/api/announcements/${selectedAnnouncement.id}`
-        : 'http://127.0.0.1:3001/api/announcements';
+        ? `/api/announcements/${selectedAnnouncement.id}`
+        : '/api/announcements';
       
       const method = selectedAnnouncement ? 'PUT' : 'POST';
 
@@ -740,7 +740,7 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:3001/api/announcements/${id}`, {
+      const response = await fetch(`/api/announcements/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -1062,7 +1062,7 @@ const UserManagementSection = ({ user, authToken }) => {
       if (searchTerm) params.append('search', searchTerm);
       if (roleFilter !== 'all') params.append('role', roleFilter);
 
-      const url = `http://127.0.0.1:3001/api/auth/users?${params}`;
+      const url = `/api/auth/users?${params}`;
       console.log('📡 Fetching users from:', url);
       
       const response = await fetch(url, {
@@ -1134,7 +1134,7 @@ const UserManagementSection = ({ user, authToken }) => {
     }
 
     try {
-      const url = 'http://127.0.0.1:3001/api/auth/create-user';
+      const url = '/api/auth/create-user';
       console.log('\n📡 ===== Creating User =====');
       console.log('   URL:', url);
       console.log('   Method: POST');
@@ -1199,7 +1199,7 @@ const UserManagementSection = ({ user, authToken }) => {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:3001/api/auth/users/${userId}`, {
+      const response = await fetch(`/api/auth/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -1476,7 +1476,7 @@ function AppContent() {
   const handleLogout = async () => {
     try {
       if (authToken) {
-        await fetch('http://127.0.0.1:3001/api/auth/logout', {
+        await fetch('/api/auth/logout', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authToken}`,

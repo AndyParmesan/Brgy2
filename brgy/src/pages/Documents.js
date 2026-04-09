@@ -147,7 +147,7 @@ const Documents = () => {
     setSubmitSuccess(false);
 
     try {
-      const response = await fetch('http://127.0.0.1:3001/api/public/document-request', {
+      const response = await fetch('/api/public/document-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

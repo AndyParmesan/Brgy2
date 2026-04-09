@@ -28,7 +28,7 @@ const AuditLogSection = ({ authToken }) => {
       if (filters.dateTo) params.append('dateTo', filters.dateTo);
       params.append('limit', filters.limit);
 
-      const response = await fetch(`http://127.0.0.1:3001/api/activity-logs?${params}`, {
+      const response = await fetch(`/api/activity-logs?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',

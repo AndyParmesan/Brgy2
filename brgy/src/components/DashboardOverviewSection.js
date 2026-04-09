@@ -14,7 +14,7 @@ const DashboardOverviewSection = ({ authToken }) => {
     setLoading(true);
     try {
       // Fetch statistics
-      const statsResponse = await fetch('http://127.0.0.1:3001/api/statistics', {
+      const statsResponse = await fetch('/api/statistics', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ const DashboardOverviewSection = ({ authToken }) => {
       }
 
       // Fetch recent pending document requests
-      const docsResponse = await fetch('http://127.0.0.1:3001/api/document-requests?status=Pending&limit=5', {
+      const docsResponse = await fetch('/api/document-requests?status=Pending&limit=5', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ const DashboardOverviewSection = ({ authToken }) => {
       }
 
       // Fetch activity logs
-      const logsResponse = await fetch('http://127.0.0.1:3001/api/activity-logs?limit=20', {
+      const logsResponse = await fetch('/api/activity-logs?limit=20', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',

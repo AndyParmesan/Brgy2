@@ -80,7 +80,7 @@ You should see:
 ```
 ✅ MySQL Database connected successfully!
 🚀 Server started successfully!
-   API URL: http://127.0.0.1:3001/api
+   API URL: /api
 ```
 
 ## Files Created

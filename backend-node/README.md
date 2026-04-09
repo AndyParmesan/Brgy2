@@ -115,7 +115,7 @@ The server will automatically test the database connection on startup. Check the
 
 ### Test API Endpoint
 ```bash
-curl http://127.0.0.1:3001/api/public/documents
+curl /api/public/documents
 ```
 
 ## Project Structure
