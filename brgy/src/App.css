@@ -894,3 +894,108 @@ input {
     max-height: 95vh;
   }
 }
+
+/* ========================================= */
+/* PRINT / PDF GENERATION STYLES             */
+/* ========================================= */
+@media print {
+  /* 1. Hide everything we don't want on the paper/PDF */
+  .sidebar, 
+  .top-bar, 
+  .no-print,
+  .action-bar {
+    display: none !important;
+  }
+
+  /* 2. Strip away background colors and center the report */
+  body, html, .dashboard-shell {
+    background-color: white !important;
+    display: block !important;
+    height: auto !important;
+  }
+
+  /* 3. Make the main panel take up the full page width */
+  .main-panel {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* 4. Ensure charts don't get cut in half across pages */
+  .print-panel {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    margin-bottom: 2rem !important;
+  }
+}
+/* ========================================= */
+/* MOBILE RESPONSIVE OVERRIDE (Phones/Tablets) */
+/* ========================================= */
+@media (max-width: 768px) {
+  /* 1. Stack the Dashboard Layout */
+  .dashboard-shell {
+    flex-direction: column;
+  }
+
+  /* 2. Reposition Sidebar to Bottom for Thumb-Navigation */
+  .sidebar {
+    width: 100% !important;
+    height: 70px !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    flex-direction: row !important;
+    padding: 0 1rem !important;
+    justify-content: space-around;
+    border-right: none !important;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .sidebar-logo, .sidebar-footer {
+    display: none; /* Hide logo/footer on mobile to save space */
+  }
+
+  .nav-item span {
+    display: none; /* Hide text labels, show only icons */
+  }
+
+  /* 3. Adjust Main Content Padding (Extra space at bottom for nav) */
+  .main-panel {
+    padding: 1rem !important;
+    margin-bottom: 80px;
+    width: 100% !important;
+  }
+
+  /* 4. Statistics Grid: 4 columns -> 2 columns */
+  .reports-grid, .blotter-stats, .resident-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* 5. THE TABLE FIX: Convert rows to vertical cards */
+  .table-row, .blotter-row, .resident-row {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 1rem !important;
+    border-bottom: 2px solid #3b82f6 !important;
+    gap: 5px;
+  }
+
+  .table-row.head {
+    display: none !important; /* Hide the headers on mobile */
+  }
+
+  /* Add labels before the data for clarity */
+  .table-row span::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #64748b;
+    margin-right: 10px;
+    display: inline-block;
+    width: 100px;
+  }
+}

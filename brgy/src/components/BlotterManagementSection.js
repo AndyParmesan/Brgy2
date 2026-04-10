@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CaseTimeline from './CaseTimeline';
 
 const BlotterManagementSection = ({ authToken }) => {
   const [cases, setCases] = useState([]);
@@ -243,6 +244,9 @@ const BlotterManagementSection = ({ authToken }) => {
               <button className="modal-close" onClick={() => { setShowStatusModal(false); setSelectedCase(null); }}>×</button>
             </div>
             <div style={{ padding: '1rem 0' }}>
+
+            <CaseTimeline currentStatus={selectedCase.status} />
+
               <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
                 <p><strong>Case No:</strong> {selectedCase.case_no || `BR-${selectedCase.id}`}</p>
                 <p><strong>Title:</strong> {selectedCase.case_title}</p>

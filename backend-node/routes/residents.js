@@ -4,6 +4,24 @@ const { query } = require('../config/database');
 const authRoutes = require('./auth');
 const authenticateToken = authRoutes.authenticateToken;
 const { logActivity } = require('../utils/activityLogger');
+const multer = require('multer');
+const path = require('path');
+
+// --- MULTER PHOTO STORAGE SETUP ---
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/'); 
+  },
+  filename: function (req, file, cb) {
+    // This renames the file to something unique like: resident-1678901234.jpg
+    cb(null, 'resident-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5000000 } // 5MB limit
+});
 
 // Protected: Get all residents (from residents table)
 router.get('/residents', authenticateToken, async (req, res) => {
@@ -246,6 +264,36 @@ router.delete('/residents/:id', authenticateToken, async (req, res) => {
       error: 'Failed to delete resident',
       message: 'An error occurred while deleting the resident.'
     });
+  }
+});
+
+// Protected: Upload a resident photo
+router.post('/residents/:id/photo', authenticateToken, upload.single('photo'), async (req, res) => {
+  try {
+    const residentId = req.params.id;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No photo uploaded' });
+    }
+
+    // The unique filename multer just generated
+    const photoFilename = req.file.filename;
+
+    // Save the filename to the database
+    await query(
+      'UPDATE residents SET photo_url = ? WHERE id = ?',
+      [photoFilename, residentId]
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Photo uploaded successfully',
+      photo_url: photoFilename
+    });
+
+  } catch (error) {
+    console.error('Photo upload error:', error);
+    res.status(500).json({ error: 'Failed to upload photo' });
   }
 });
 

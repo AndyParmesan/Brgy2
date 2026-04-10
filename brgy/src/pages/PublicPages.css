@@ -42,16 +42,19 @@
   align-items: center;
 }
 
-.image-placeholder {
+.hero-actual-image {
   width: 100%;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.2);
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.hero-actual-image:hover {
+  transform: translateY(-5px);
 }
 
 /* Document Request Section */

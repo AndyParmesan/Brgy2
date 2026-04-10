@@ -49,6 +49,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/public', authRoutes); // Register endpoint is in auth routes
+app.use('/uploads', express.static('public/uploads'));
 
 // Debug: Log all registered routes
 console.log('\n📋 ===== Registered API Routes =====');

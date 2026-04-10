@@ -5,6 +5,16 @@ const authRoutes = require('./auth');
 const authenticateToken = authRoutes.authenticateToken;
 const { logActivity } = require('../utils/activityLogger');
 
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'lasseterjohn75@gmail.com', 
+    pass: 'yycdihkmfffvllej' // I removed the spaces for you so it doesn't cause an auth error!
+  }
+});
+
 // Public: Get document types
 router.get('/public/documents', (req, res) => {
   const documents = [
@@ -292,6 +302,50 @@ router.put('/document-requests/:id', authenticateToken, async (req, res) => {
 
     console.log(`✅ Document request ${requestId} updated to ${status} by ${req.user.email}`);
 
+// --- BEGIN NODEMAILER LOGIC ---
+    try {
+      // 1. Fetch the resident's email and details from MySQL (Fixed column names!)
+      const emailQuery = await query(
+        'SELECT email, requester_name, document_type, reference_no FROM document_requests WHERE id = ?', 
+        [requestId]
+      );
+      
+      const reqData = emailQuery[0];
+
+      // 2. If an email exists in the database, send the notification
+      if (reqData && reqData.email) {
+        const mailOptions = {
+          from: '"Barangay 853 Admin" <lasseterjohn75@gmail.com>',
+          to: reqData.email,
+          subject: `Update on your Barangay Document Request: ${status}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
+              <h2 style="color: #2563eb;">Document Request Update</h2>
+              <p>Hello <strong>${reqData.requester_name || 'Resident'}</strong>,</p>
+              <p>Your request for a <strong>${reqData.document_type || 'Document'}</strong> has been updated to:</p>
+              <h3 style="background: #f3f4f6; padding: 10px; text-align: center; border-radius: 5px; color: #1f2937;">
+                STATUS: ${status.toUpperCase()}
+              </h3>
+              <p>Tracking Reference Number: <strong>${reqData.reference_no || requestId}</strong></p>
+              <p>You can track the exact details anytime on the Barangay 853 Public Portal.</p>
+              <br/>
+              <p style="color: #6b7280; font-size: 12px;">Thank you,<br/>Barangay 853 Administration</p>
+            </div>
+          `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) console.error('⚠️ Error sending email:', error);
+          else console.log('✅ Email notification sent to:', reqData.email);
+        });
+      } else {
+        console.log('⚠️ No email address found for this request in the database.');
+      }
+    } catch (emailErr) {
+      console.error('⚠️ Could not fetch email data:', emailErr);
+    }
+    // --- END NODEMAILER LOGIC ---
+    
     // Log activity
     await logActivity({
       actorName: req.user.name || req.user.email,

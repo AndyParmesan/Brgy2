@@ -71,9 +71,27 @@ const StatisticsSection = ({ authToken }) => {
   const blotterStatusData = Object.entries(stats.blotterCases.byStatus).map(([name, value]) => ({ name, value }));
 
   return (
-    <>
+    <div className="printable-report-area">
+      {/* PRINT BUTTON ACTION BAR */}
+      <div className="action-bar no-print" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+        <button 
+          onClick={() => window.print()} 
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '0.5rem', 
+            background: '#2563eb', color: 'white', padding: '0.75rem 1.5rem', 
+            borderRadius: '0.5rem', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)'
+          }}
+        >
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          Print / Save as PDF
+        </button>
+      </div>
+
       {/* OVERVIEW CARDS */}
-      <section className="panel reports-module">
+      <section className="panel reports-module print-panel">
         <header className="panel-heading">
           <div>
             <h2>Overview Statistics</h2>
@@ -105,7 +123,7 @@ const StatisticsSection = ({ authToken }) => {
       </section>
 
       {/* DOCUMENT REQUESTS CHARTS */}
-      <section className="panel">
+      <section className="panel print-panel">
         <header className="panel-heading">
           <div>
             <h2>Document Requests Breakdown</h2>
@@ -114,7 +132,6 @@ const StatisticsSection = ({ authToken }) => {
         </header>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
           
-          {/* Status Pie Chart */}
           <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
             <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Requests by Status</h3>
             <div style={{ width: '100%', height: 300 }}>
@@ -132,7 +149,6 @@ const StatisticsSection = ({ authToken }) => {
             </div>
           </div>
 
-          {/* Type Bar Chart */}
           <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
             <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Requests by Document Type</h3>
             <div style={{ width: '100%', height: 300 }}>
@@ -151,7 +167,7 @@ const StatisticsSection = ({ authToken }) => {
       </section>
 
       {/* BLOTTER CASES CHARTS */}
-      <section className="panel">
+      <section className="panel print-panel">
         <header className="panel-heading">
           <div>
             <h2>Blotter Cases Breakdown</h2>
@@ -160,7 +176,6 @@ const StatisticsSection = ({ authToken }) => {
         </header>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
           
-          {/* Status Pie Chart */}
           <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
             <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Cases by Status</h3>
             <div style={{ width: '100%', height: 300 }}>
@@ -178,7 +193,6 @@ const StatisticsSection = ({ authToken }) => {
             </div>
           </div>
 
-          {/* Category Bar Chart */}
           <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
             <h3 style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '1rem' }}>Cases by Category</h3>
             <div style={{ width: '100%', height: 300 }}>
@@ -197,7 +211,7 @@ const StatisticsSection = ({ authToken }) => {
       </section>
 
       {/* TRENDS */}
-      <section className="panel trend-module">
+      <section className="panel trend-module print-panel">
         <header className="panel-heading">
           <div>
             <h2>Recent Activity (Last 7 Days)</h2>
@@ -222,7 +236,7 @@ const StatisticsSection = ({ authToken }) => {
           </article>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ResidentManagementSection = ({ authToken }) => {
   const [residents, setResidents] = useState([]);
@@ -7,6 +7,10 @@ const ResidentManagementSection = ({ authToken }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // State for the photo modal
+  const [selectedResident, setSelectedResident] = useState(null);
+  
   const [formData, setFormData] = useState({
     full_name: '',
     contact_email: '',
@@ -17,6 +21,34 @@ const ResidentManagementSection = ({ authToken }) => {
     gender: '',
     occupation: ''
   });
+
+  const handlePhotoUpload = async (residentId, file) => {
+    if (!file) return;
+    
+    const uploadData = new FormData();
+    uploadData.append('photo', file);
+
+    try {
+      const response = await fetch(`/api/residents/${residentId}/photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+          // Note: Do NOT set Content-Type here. Browser sets it automatically for FormData!
+        },
+        body: uploadData,
+      });
+
+      if (response.ok) {
+        alert('Photo uploaded successfully!');
+        fetchResidents(); // Refresh the table to show the new picture
+      } else {
+        alert('Failed to upload photo.');
+      }
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+      alert('An error occurred during upload.');
+    }
+  };
 
   useEffect(() => {
     fetchResidents();
@@ -50,7 +82,6 @@ const ResidentManagementSection = ({ authToken }) => {
     }
   };
 
-
   const handleCreate = () => {
     setFormData({
       full_name: '',
@@ -79,7 +110,6 @@ const ResidentManagementSection = ({ authToken }) => {
     }
 
     try {
-      // Create resident in residents table
       const response = await fetch('/api/residents', {
         method: 'POST',
         headers: {
@@ -108,16 +138,10 @@ const ResidentManagementSection = ({ authToken }) => {
       } else {
         const errorMessage = data.message || data.error || 'Failed to create resident';
         setError(errorMessage);
-        console.error('❌ Create resident error:', {
-          status: response.status,
-          statusText: response.statusText,
-          data: data
-        });
       }
     } catch (err) {
       const errorMessage = err.message || 'Failed to create resident. Please check your connection and try again.';
       setError(errorMessage);
-      console.error('❌ Network error creating resident:', err);
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +153,6 @@ const ResidentManagementSection = ({ authToken }) => {
     }
 
     try {
-      // Delete from residents table
       const response = await fetch(`/api/residents/${id}`, {
         method: 'DELETE',
         headers: {
@@ -234,17 +257,69 @@ const ResidentManagementSection = ({ authToken }) => {
                 <span>{resident.contact_email || 'N/A'}</span>
                 <span>{resident.address ? resident.address.substring(0, 30) + '...' : 'N/A'}</span>
                 <span>{resident.zone || 'N/A'}</span>
+                
+                {/* BUTTONS SAFELY INSIDE THE TABLE ROW */}
                 <span>
+                  <button className="ghost-btn" onClick={() => setSelectedResident(resident)} style={{ color: '#3b82f6', marginRight: '0.5rem' }}>
+                    📷 Photo
+                  </button>
                   <button className="ghost-btn" onClick={() => handleDelete(resident.id)} style={{ color: '#ef4444' }}>
                     Delete
                   </button>
                 </span>
+                
               </div>
             ))
           )}
         </div>
       )}
 
+      {/* --- RESIDENT PHOTO MODAL --- */}
+      {selectedResident && (
+        <div className="modal-overlay" onClick={() => setSelectedResident(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Resident Profile</h3>
+              <button className="modal-close" onClick={() => setSelectedResident(null)}>×</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem' }}>
+              <img 
+                src={selectedResident.photo_url ? `http://127.0.0.1:3001/uploads/${selectedResident.photo_url}` : 'https://via.placeholder.com/150?text=No+Photo'} 
+                alt="Resident Profile" 
+                style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+              />
+              
+              <div style={{ textAlign: 'center' }}>
+                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>{selectedResident.full_name}</h4>
+                <p style={{ margin: '0 0 1.5rem 0', color: '#64748b' }}>{selectedResident.address}</p>
+                
+                <input 
+                  type="file" 
+                  id={`photo-upload-${selectedResident.id}`} 
+                  style={{ display: 'none' }} 
+                  accept="image/*"
+                  onChange={(e) => {
+                    if(e.target.files && e.target.files[0]) {
+                      handlePhotoUpload(selectedResident.id, e.target.files[0]);
+                      setSelectedResident(null); // Close modal after upload starts
+                    }
+                  }}
+                />
+                <button 
+                  className="primary-btn" 
+                  onClick={() => document.getElementById(`photo-upload-${selectedResident.id}`).click()}
+                  style={{ width: '100%' }}
+                >
+                  📷 Upload New Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- CREATE RESIDENT MODAL --- */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setError(''); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
@@ -368,4 +443,3 @@ const ResidentManagementSection = ({ authToken }) => {
 };
 
 export default ResidentManagementSection;
-

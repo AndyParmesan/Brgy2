@@ -40,7 +40,16 @@ const LandingPage = ({ user, onLogout }) => {
             <p className="hero-subtitle">This platform serves as the official online system for managing barangay-related services, announcements, and requests. It is designed to streamline communication, improve accessibility, and ensure efficient public service for all residents.</p>
           </div>
           <div className="hero-image">
-            <div className="image-placeholder">Hero Image</div>
+            <img 
+              src="/brgyimg.jpg" 
+              alt="Barangay 853" 
+              className="hero-actual-image"
+              onError={(e) => {
+                e.target.onerror = null;
+                // Automatically falls back to a beautiful community photo if local file is missing
+                e.target.src = "https://images.unsplash.com/photo-1577563908411-5077b6dc7624?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+              }}
+            />
           </div>
         </div>
       </section>
