@@ -101,7 +101,7 @@ router.put('/:id', auth, async (req, res) => {
     // If we found an email, send the notification!
     if (targetEmail) {
       const mailOptions = {
-        from: '"Barangay 853 Admin" <YOUR_EMAIL@gmail.com>', // Must match the user email above
+        from: '"Barangay 853 Admin" <barangay853kahilomiii@gmail.com>', // Must match the user email above
         to: targetEmail,
         subject: `Update on your Barangay Document Request: ${status}`,
         html: `
