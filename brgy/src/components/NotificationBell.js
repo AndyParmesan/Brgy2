@@ -140,12 +140,27 @@ export default function NotificationBell({ authToken, onNavigate }) {
     setTimeout(fetchNotifications, 100);
   };
 
-  // ── Navigate to section ─────────────────────────────────────────────────
+// ── Navigate to section ─────────────────────────────────────────────────
   const handleItemClick = (section) => {
-    setOpen(false);
+    setOpen(false); // Close the dropdown
+
+    // If a specific section string is passed, force the hash route
+    if (section) {
+      if (section === 'document-requests') {
+        window.location.hash = '#document-requests';
+      } else if (section === 'blotter') {
+        window.location.hash = '#blotter-disputes';
+      } else if (section === 'contact') {
+        window.location.hash = '#contact-messages'; // Or whatever your contact hash is
+      } else {
+        window.location.hash = `#${section}`;
+      }
+    }
+
+    // Call the original onNavigate just in case your parent component needs it to update state
     if (onNavigate) onNavigate(section);
   };
-
+  
   // ── Styles ──────────────────────────────────────────────────────────────
   const wrapStyle = {
     position: 'relative',

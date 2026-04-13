@@ -41,21 +41,27 @@ router.post('/contact', async (req, res) => {
 router.get('/contact-messages', async (req, res) => {
   try {
     const { status, limit } = req.query;
-    let sql = 'SELECT * FROM contacts';
+    
+    // Added WHERE 1=1 to make appending conditions cleaner
+    let sql = 'SELECT * FROM contacts WHERE 1=1';
     let params = [];
 
     // Map 'Unread' from the frontend to the 'new' status stored in the database
     if (status) {
       const dbStatus = status.toLowerCase() === 'unread' ? 'new' : status.toLowerCase();
-      sql += ' WHERE status = ?';
+      sql += ' AND status = ?';
       params.push(dbStatus);
     }
 
-    sql += ' ORDER BY id DESC'; // Assuming 'id' is auto-incrementing
+    sql += ' ORDER BY id DESC';
 
+    // The Bulletproof LIMIT fix:
     if (limit) {
-      sql += ' LIMIT ?';
-      params.push(parseInt(limit, 10));
+      // Safely convert to a number, fallback to 50 if something goes wrong
+      const limitNum = parseInt(limit, 10) || 50; 
+      
+      // Inject directly into the string to bypass the mysql2 ? placeholder bug
+      sql += ` LIMIT ${limitNum}`; 
     }
 
     const messages = await query(sql, params);

@@ -95,6 +95,28 @@ const DashboardOverviewSection = ({ authToken }) => {
     }
   };
 
+const formatDetails = (detailsString) => {
+    if (!detailsString) return '';
+    try {
+      // Try to parse it as JSON
+      const data = JSON.parse(detailsString);
+      
+      // If it has the specific structure from your screenshot, format it nicely
+      if (data.details && data.audit && data.audit.email) {
+        return `${data.details} (${data.audit.email})`;
+      }
+      
+      // If it's JSON but not that specific structure, just return the details part
+      if (data.details) return data.details;
+      
+      // If all else fails, return the raw string
+      return detailsString;
+    } catch (e) {
+      // If it's just regular text (not JSON), return it as is
+      return detailsString;
+    }
+  };
+
   const getModuleIcon = (module) => {
     const icons = {
       'Document': '📄',
@@ -233,15 +255,15 @@ const DashboardOverviewSection = ({ authToken }) => {
                         )}
                       </div>
                       {log.details && (
-                        <p style={{ 
-                          margin: '0.25rem 0 0 0', 
-                          color: '#6b7280', 
-                          fontSize: '0.875rem',
-                          wordBreak: 'break-word'
-                        }}>
-                          {log.details}
-                        </p>
-                      )}
+                      <p style={{ 
+                        margin: '0.25rem 0 0 0', 
+                        color: '#6b7280', 
+                        fontSize: '0.875rem',
+                        wordBreak: 'break-word'
+                      }}>
+                        {formatDetails(log.details)}
+                      </p>
+                    )}
                       <div style={{ 
                         marginTop: '0.25rem', 
                         fontSize: '0.75rem', 
