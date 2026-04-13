@@ -315,7 +315,7 @@ router.put('/document-requests/:id', authenticateToken, async (req, res) => {
       // 2. If an email exists in the database, send the notification
       if (reqData && reqData.email) {
         const mailOptions = {
-          from: '"Barangay 853 Admin" <lasseterjohn75@gmail.com>',
+          from: '"Barangay 853 Admin" <barangay853kahilomiii@gmail.com>',
           to: reqData.email,
           subject: `Update on your Barangay Document Request: ${status}`,
           html: `
