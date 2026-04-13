@@ -78,3 +78,30 @@ Mobile Responsive Navigation: Refined the entire UI using CSS media queries to e
 Activity Audit Logging: Established a secure backend logger that records every administrative action for transparency and system accountability.
 
 Database Debugging & Optimization: Resolved critical SQL errors including missing tables, incorrect data types, and route path mismatches.
+
+SQL Queries for the updated MYSQL;
+-- 1. Create the Contacts table (Fixed the dashboard crashing/bell notification bug)
+CREATE TABLE IF NOT EXISTS contacts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(255),
+  message TEXT NOT NULL,
+  status VARCHAR(50) DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Update Residents table for Profile Pictures
+ALTER TABLE residents 
+ADD COLUMN photo_url VARCHAR(255) DEFAULT NULL;
+
+-- 3. Ensure Document Requests have the necessary columns for tracking & email
+-- Run these if your migration was missing them
+ALTER TABLE document_requests 
+ADD COLUMN IF NOT EXISTS reference_no VARCHAR(100),
+ADD COLUMN IF NOT EXISTS notes TEXT;
+
+Updated NPM for package
+npm install express mysql2 cors dotenv jsonwebtoken
+npm install nodemailer multer
+npm install --save-dev nodemon
