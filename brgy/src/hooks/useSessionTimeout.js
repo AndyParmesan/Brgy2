@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
-const WARNING_BEFORE_MS = 5 * 60 * 1000; // 5 minutes before timeout
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const WARNING_BEFORE_MS = 15 * 60 * 1000; // 15 minutes before timeout
 
 /**
  * Custom hook to manage session timeout based on user activity

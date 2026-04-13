@@ -10,8 +10,8 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'lasseterjohn75@gmail.com', 
-    pass: 'yycdihkmfffvllej' // I removed the spaces for you so it doesn't cause an auth error!
+   user: 'barangay853kahilomiii@gmail.com', // Replace with your barangay/testing Gmail
+    pass: 'cjxg vsqn tabk cqzs'     // Use an app password for security
   }
 });
 
