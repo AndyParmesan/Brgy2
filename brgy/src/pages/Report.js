@@ -9,11 +9,38 @@ const Report = () => {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [formData, setFormData] = useState({
-    reporterName: '',
-    reporterContact: '',
-    reporterEmail: '',
-    reporterAddress: '',
+
+  // Check if user is logged in
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const authToken = localStorage.getItem('auth_token');
+
+  // Formats a saved phone number (from DB) to 09XX-XXX-XXXX
+  const formatSavedPhone = (phoneStr) => {
+    if (!phoneStr) return '';
+    let cleaned = phoneStr.replace(/\D/g, '');
+
+    // Enforce "09" prefix on saved numbers
+    if (cleaned.length > 0 && cleaned[0] !== '0') {
+      cleaned = '09' + cleaned;
+    } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+      cleaned = '09' + cleaned.substring(2);
+    }
+
+    // 4-3-4 grouping: 09XX-XXX-XXXX
+    if (cleaned.length > 7) {
+      return cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      return cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+    return cleaned;
+  };
+
+  // Fields pre-filled from the logged-in user's profile
+  const getUserDefaults = () => ({
+    reporterName: user?.full_name || user?.name || '',
+    reporterContact: formatSavedPhone(user?.contact_number || user?.phone),
+    reporterEmail: user?.email || '',
+    reporterAddress: user?.address || '',
     incidentType: '',
     incidentDate: '',
     incidentTime: '',
@@ -24,11 +51,55 @@ const Report = () => {
     agreeTerms: false
   });
 
+  const [formData, setFormData] = useState(getUserDefaults);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  // FIX: Uses else-if and slices only from `cleaned` for correct 4-3-4 grouping
+  const handlePhoneChange = (e) => {
+    let cleaned = e.target.value.replace(/\D/g, '');
+
+    // Enforce "09" prefix as the user types
+    if (cleaned.length > 0 && cleaned[0] !== '0') {
+      cleaned = '09' + cleaned;
+    } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+      cleaned = '09' + cleaned.substring(2);
+    }
+
+    // Limit to 11 raw digits (09XX XXX XXXX)
+    if (cleaned.length > 11) {
+      cleaned = cleaned.slice(0, 11);
+    }
+
+    // 4-3-4 grouping using else-if so only one branch runs
+    let formatted = cleaned;
+    if (cleaned.length > 7) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      reporterContact: formatted
+    }));
+  };
+
+  // FIX: Custom clear that resets incident fields but keeps the user's auto-filled data
+  const handleClearForm = () => {
+    setFormData({
+      ...getUserDefaults(),
+      // Preserve user info fields
+      reporterName: formData.reporterName,
+      reporterContact: formData.reporterContact,
+      reporterEmail: formData.reporterEmail,
+      reporterAddress: formData.reporterAddress,
     });
   };
 
@@ -54,20 +125,8 @@ const Report = () => {
 
       setReferenceNumber(response.reference_no);
       setShowConfirmation(true);
-      setFormData({
-        reporterName: '',
-        reporterContact: '',
-        reporterEmail: '',
-        reporterAddress: '',
-        incidentType: '',
-        incidentDate: '',
-        incidentTime: '',
-        incidentLocation: '',
-        personsInvolved: '',
-        incidentDescription: '',
-        witnesses: '',
-        agreeTerms: false
-      });
+      // Reset to user defaults (not blank) after successful submit
+      setFormData(getUserDefaults());
     } catch (err) {
       console.error('Error submitting report:', err);
       setSubmitError(err.message || 'Failed to submit report. Please try again.');
@@ -133,10 +192,17 @@ const Report = () => {
               <form id="report-form" className="report-form" onSubmit={handleSubmit}>
                 <h3>Incident Report Form</h3>
                 <p className="form-subtitle">Please provide accurate and detailed information</p>
-                
+
                 {submitError && (
                   <div className="login-error" style={{ marginBottom: '1rem' }}>
                     {submitError}
+                  </div>
+                )}
+
+                {/* Auto-fill notice for logged-in users */}
+                {user && (
+                  <div style={{ padding: '0.75rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: '#166534' }}>
+                    ✅ Your profile info has been auto-filled below. You may update it if needed.
                   </div>
                 )}
 
@@ -162,10 +228,13 @@ const Report = () => {
                         type="tel" 
                         name="reporterContact"
                         className="input" 
-                        placeholder="09XX-XXX-XXXX" 
+                        placeholder="09XX-XXX-XXXX"
+                        pattern="^09\d{2}-\d{3}-\d{4}$"
+                        title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
+                        maxLength={13}
                         required
                         value={formData.reporterContact}
-                        onChange={handleChange}
+                        onChange={handlePhoneChange}
                       />
                     </div>
                     <div className="form-group">
@@ -310,7 +379,8 @@ const Report = () => {
                 </div>
 
                 <div className="form-actions">
-                  <button type="reset" className="btn secondary" disabled={submitting}>Clear Form</button>
+                  {/* FIX: Custom clear handler instead of type="reset" to preserve auto-fill */}
+                  <button type="button" className="btn secondary" onClick={handleClearForm} disabled={submitting}>Clear Form</button>
                   <button type="submit" className="btn primary" disabled={submitting}>
                     {submitting ? 'Submitting...' : 'Submit Report'}
                   </button>
@@ -342,4 +412,3 @@ const Report = () => {
 };
 
 export default Report;
-

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DocumentRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DocumentRequestController extends Controller
 {
@@ -26,6 +27,29 @@ class DocumentRequestController extends Controller
         return response()->json(
             $query->orderByDesc('date_filed')->paginate(25)
         );
+    }
+
+    /**
+     * Generates a cryptographically random, collision-safe reference number.
+     *
+     * Format: DOC-{YEAR}-{8 random alphanumeric chars}
+     * Example: DOC-2026-K4RX92BT
+     *
+     * - Keeps the "DOC-" prefix and year for easy identification/filtering
+     * - Replaces the sequential counter with 8 random uppercase alphanumeric chars
+     *   (36^8 ≈ 2.8 trillion combinations — not enumerable)
+     * - Loops on the rare chance of a collision (practically never happens)
+     */
+    private function generateReferenceNumber(): string
+    {
+        do {
+            // Use Laravel's Str::random which pulls from random_bytes() internally —
+            // cryptographically secure, not mt_rand/array_rand.
+            $token = strtoupper(Str::random(8));
+            $referenceNo = 'DOC-' . date('Y') . '-' . $token;
+        } while (DocumentRequest::where('reference_no', $referenceNo)->exists());
+
+        return $referenceNo;
     }
 
     /**
@@ -158,37 +182,31 @@ class DocumentRequestController extends Controller
     {
         $validated = $request->validate([
             'requester_name' => 'required|string|max:255',
-            'document_type' => 'required|string|max:255',
-            'purpose' => 'required|string|max:500',
+            'document_type'  => 'required|string|max:255',
+            'purpose'        => 'required|string|max:500',
             'contact_number' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'address' => 'required|string|max:500',
+            'email'          => 'nullable|email|max:255',
+            'address'        => 'required|string|max:500',
             'additional_info' => 'nullable|string|max:1000',
         ]);
 
-        // Generate reference number
-        $docCount = DocumentRequest::whereYear('created_at', date('Y'))->count() + 1;
-        $referenceNo = 'DOC-' . date('Y') . '-' . str_pad($docCount, 3, '0', STR_PAD_LEFT);
-
         $documentRequest = DocumentRequest::create([
-            'reference_no' => $referenceNo,
+            'reference_no'   => $this->generateReferenceNumber(),
             'requester_name' => $validated['requester_name'],
-            'document_type' => $validated['document_type'],
-            'purpose' => $validated['purpose'],
+            'document_type'  => $validated['document_type'],
+            'purpose'        => $validated['purpose'],
             'contact_number' => $validated['contact_number'],
-            'email' => $validated['email'] ?? null,
-            'address' => $validated['address'],
-            'status' => 'Pending',
-            'date_filed' => now()->toDateString(),
+            'email'          => $validated['email'] ?? null,
+            'address'        => $validated['address'],
+            'status'         => 'Pending',
+            'date_filed'     => now()->toDateString(),
             'additional_info' => $validated['additional_info'] ?? null,
         ]);
 
         return response()->json([
-            'message' => 'Document request submitted successfully',
+            'message'      => 'Document request submitted successfully',
             'reference_no' => $documentRequest->reference_no,
-            'data' => $documentRequest
+            'data'         => $documentRequest
         ], 201);
     }
 }
-
-

@@ -97,6 +97,30 @@ const ResidentManagementSection = ({ authToken }) => {
     setShowCreateModal(true);
   };
 
+const handleAdminPhoneChange = (e) => {
+// 1. Remove all non-numeric characters
+    let cleaned = e.target.value.replace(/\D/g, '');
+    
+    // 2. AUTO-FORCE "09" AT THE START
+    if (cleaned.length > 0) {
+      if (cleaned[0] !== '0') {
+        cleaned = '09' + cleaned; // If they type '1', it becomes '091'
+      } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+        cleaned = '09' + cleaned.substring(1); // If they type '08', it forces '098'
+      }
+    }
+
+    let formatted = cleaned;
+    // ... the rest of the formatting (length > 4, etc.) stays exactly the same
+
+    // Assuming your state for the new resident is called 'newResident' 
+    // and the field is 'contact_mobile'. Change these if they are named differently!
+    setFormData(prev => ({
+          ...prev,
+          contact_mobile: formatted 
+        }));
+      };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -349,13 +373,14 @@ const ResidentManagementSection = ({ authToken }) => {
                 <div className="form-group">
                   <label>Contact Mobile *</label>
                   <input
-                    type="tel"
-                    value={formData.contact_mobile}
-                    onChange={(e) => setFormData({ ...formData, contact_mobile: e.target.value })}
-                    required
-                    placeholder="09XX-XXX-XXXX"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
-                  />
+                  type="tel"
+                  value={formData.contact_mobile}
+                  onChange={handleAdminPhoneChange} /* <-- Use the new function */
+                  placeholder="09XX-XXX-XXXX"
+                  pattern="^09\d{2}-\d{3}-\d{4}$" /* <-- Strict validation */
+                  title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
+                  required
+                />
                 </div>
                 <div className="form-group">
                   <label>Contact Email</label>

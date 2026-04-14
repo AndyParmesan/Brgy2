@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
@@ -15,13 +15,7 @@ const Documents = () => {
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [selectedDocumentType, setSelectedDocumentType] = useState(documentType || '');
-  const [formData, setFormData] = useState({
-    document_type: documentType || '',
-    purpose: '',
-    contact_number: '',
-    address: '',
-    additional_info: ''
-  });
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -29,6 +23,48 @@ const Documents = () => {
   // Check if user is logged in
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   const authToken = localStorage.getItem('auth_token');
+
+  // Formats a saved phone number (from DB) to 09XX-XXX-XXXX
+  // Uses the same 4-3-4 grouping logic as handlePhoneChange
+  const formatSavedPhone = (phoneStr) => {
+    if (!phoneStr) return '';
+    let cleaned = phoneStr.replace(/\D/g, '');
+
+    // Enforce "09" prefix on saved numbers too
+    if (cleaned.length > 0 && cleaned[0] !== '0') {
+      cleaned = '09' + cleaned;
+    } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+      cleaned = '09' + cleaned.substring(2);
+    }
+
+    // 4-3-4 grouping: 09XX-XXX-XXXX
+    if (cleaned.length > 7) {
+      return cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      return cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+    return cleaned;
+  };
+
+  const [formData, setFormData] = useState({
+    document_type: documentType || '',
+    purpose: '',
+    contact_number: formatSavedPhone(user?.contact_number || user?.phone),
+    address: user?.address || '',
+    additional_info: ''
+  });
+
+  // Re-populate user fields every time the request form opens.
+  // This handles cases where the user object loads after initial render.
+  useEffect(() => {
+    if (showRequestForm && user) {
+      setFormData(prev => ({
+        ...prev,
+        contact_number: formatSavedPhone(user?.contact_number || user?.phone) || prev.contact_number,
+        address: user?.address || prev.address,
+      }));
+    }
+  }, [showRequestForm]);
 
   const requirements = {
     'clearance-requirements': {
@@ -138,6 +174,37 @@ const Documents = () => {
     setSelectedDocumentType(docType);
     setFormData(prev => ({ ...prev, document_type: docType }));
     setShowRequestForm(true);
+  };
+
+  // FIX: Uses else-if and slices only from `cleaned` (not `formatted`)
+  // to produce the correct 09XX-XXX-XXXX grouping at every length.
+  const handlePhoneChange = (e) => {
+    let cleaned = e.target.value.replace(/\D/g, '');
+
+    // Enforce "09" prefix as the user types
+    if (cleaned.length > 0 && cleaned[0] !== '0') {
+      cleaned = '09' + cleaned;
+    } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+      cleaned = '09' + cleaned.substring(2);
+    }
+
+    // Limit to 11 digits (09XX-XXX-XXXX = 11 raw digits)
+    if (cleaned.length > 11) {
+      cleaned = cleaned.slice(0, 11);
+    }
+
+    // 4-3-4 grouping using else-if so only one branch runs
+    let formatted = cleaned;
+    if (cleaned.length > 7) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      contact_number: formatted
+    }));
   };
 
   const handleSubmitRequest = async (e) => {
@@ -379,6 +446,34 @@ const Documents = () => {
                     {submitError}
                   </div>
                 )}
+
+                {/* Auto-filled read-only fields shown to logged-in users */}
+                {user && (
+                  <div style={{ padding: '0.75rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: '#166534' }}>
+                    ✅ Your profile info has been auto-filled below. You may update it if needed.
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={user?.full_name || user?.name || ''}
+                    readOnly
+                    style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    readOnly
+                    style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+                  />
+                </div>
+
                 <div className="form-group">
                   <label>Document Type *</label>
                   <input
@@ -388,6 +483,7 @@ const Documents = () => {
                     style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Purpose *</label>
                   <textarea
@@ -398,16 +494,21 @@ const Documents = () => {
                     rows="3"
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Contact Number *</label>
                   <input
                     type="tel"
                     value={formData.contact_number}
-                    onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-                    placeholder="0917 123 4567"
+                    onChange={handlePhoneChange}
+                    placeholder="09XX-XXX-XXXX"
+                    pattern="^09\d{2}-\d{3}-\d{4}$"
+                    title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
+                    maxLength={13}
                     required
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Complete Address *</label>
                   <textarea
@@ -418,6 +519,7 @@ const Documents = () => {
                     rows="2"
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Additional Information</label>
                   <textarea
@@ -427,6 +529,7 @@ const Documents = () => {
                     rows="3"
                   />
                 </div>
+
                 <div className="modal-footer">
                   <button type="button" className="btn secondary" onClick={() => setShowRequestForm(false)}>Cancel</button>
                   <button type="submit" className="btn primary" disabled={submitting}>
@@ -445,4 +548,3 @@ const Documents = () => {
 };
 
 export default Documents;
-

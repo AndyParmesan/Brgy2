@@ -247,42 +247,82 @@ input {
   gap: 1rem;
 }
 
-.action-btn {
-  border: none;
-  color: #fff;
-  border-radius: 0.85rem;
-  padding: 1rem 1.2rem;
+/* ========================================= */
+/* STANDARDIZED BUTTON SYSTEM                */
+/* ========================================= */
+
+/* 1. Base style applied to ALL buttons so they behave equally */
+.primary-btn, .secondary-btn, .ghost-btn, .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap; /* MAGIC FIX: Stops text from wrapping to a second line */
   font-weight: 600;
-  font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 12px 18px rgba(37, 99, 235, 0.25);
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+  text-decoration: none; 
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
-.action-btn:hover {
-  transform: translateY(-2px);
-}
-
+/* 2. The Main Blue Button */
 .primary-btn {
   border: none;
-  border-radius: 0.85rem;
-  padding: 0.95rem 1.25rem;
-  font-weight: 600;
+  border-radius: 0.5rem; /* Clean rounded rectangle */
+  padding: 0.6rem 1.2rem; /* Balanced height */
   background: linear-gradient(120deg, #2563eb, #4f46e5);
   color: #fff;
-  cursor: pointer;
-  box-shadow: 0 15px 25px rgba(37, 99, 235, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
-
 .primary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 20px 30px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+.primary-btn.compact {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  box-shadow: none;
 }
 
-.primary-btn.compact {
-  padding: 0.75rem 1.25rem;
-  box-shadow: none;
+/* 3. The Secondary White/Gray Button */
+.secondary-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem; /* Exactly the same height as primary-btn */
+  background: #fff;
+  color: #475569;
+}
+.secondary-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* 4. The Transparent Table Button */
+.ghost-btn {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem; /* Smaller so it fits nicely inside tables */
+  background: transparent;
+  color: #3b82f6;
+}
+.ghost-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+/* 5. The Big Dashboard Quick Actions */
+.action-btn {
+  border: none;
+  border-radius: 0.85rem;
+  padding: 1rem 1.2rem;
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
+}
+.action-btn:hover {
+  transform: translateY(-2px);
 }
 
 .stats-grid {
@@ -404,13 +444,6 @@ input {
   color: #b45309;
 }
 
-.ghost-btn {
-  border: 1px solid #cbd5f5;
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.35rem 0.95rem;
-  cursor: pointer;
-}
 
 .activity-feed {
   list-style: none;

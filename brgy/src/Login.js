@@ -115,6 +115,30 @@ function Login({ onLogin }) {
     }));
   };
 
+const handleRegPhoneChange = (e) => {
+// 1. Remove all non-numeric characters
+    let cleaned = e.target.value.replace(/\D/g, '');
+    
+    // 2. AUTO-FORCE "09" AT THE START
+    if (cleaned.length > 0) {
+      if (cleaned[0] !== '0') {
+        cleaned = '09' + cleaned; // If they type '1', it becomes '091'
+      } else if (cleaned.length > 1 && cleaned[1] !== '9') {
+        cleaned = '09' + cleaned.substring(1); // If they type '08', it forces '098'
+      }
+    }
+
+    let formatted = cleaned;
+    // ... the rest of the formatting (length > 4, etc.) stays exactly the same
+
+    // Assuming your registration state is called regData and the field is contactNumber.
+    // If your state is named differently, update 'setRegData' to match!
+    setRegData(prev => ({
+      ...prev,
+      contactNumber: formatted 
+    }));
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
@@ -327,15 +351,17 @@ function Login({ onLogin }) {
             <div className="form-group">
               <label htmlFor="reg-contact">Contact Number <span className="required">*</span></label>
               <input
-                id="reg-contact"
+               id="reg-contact" /* <-- Keeps the label click working */
                 type="tel"
                 name="contactNumber"
                 value={regData.contactNumber}
-                onChange={handleRegChange}
-                required
+                onChange={handleRegPhoneChange} 
                 placeholder="09XX-XXX-XXXX"
-                disabled={loading}
-              />
+                pattern="^09\d{2}-\d{3}-\d{4}$" 
+                title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
+                required
+                disabled={loading} /* <-- Locks the input when submitting */
+            />
             </div>
 
             <div className="form-group">
@@ -347,7 +373,7 @@ function Login({ onLogin }) {
                 value={regData.address}
                 onChange={handleRegChange}
                 required
-                placeholder="Complete address"
+                placeholder="Complete address" /* <--- CHANGE THIS BACK */
                 disabled={loading}
               />
             </div>

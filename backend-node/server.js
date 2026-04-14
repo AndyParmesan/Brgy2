@@ -77,14 +77,24 @@ app.use('/api/public', blotterRoutes);
 app.use('/api/public', contactRoutes);
 
 // ==========================================
-// PUBLIC ROUTES (No Auth Required)
+// SECURE PUBLIC TRACKING ROUTE
 // ==========================================
 app.get('/api/public/track-document/:id', async (req, res) => {
   try {
     const trackingId = req.params.id;
 
-    // We use your exact database columns (reference_no, requester_name, date_filed)
-    // and map them to what the React frontend expects (id, full_name, created_at)
+    // 1. STRICT FORMAT VALIDATION
+    // Check if it starts with 'DOC-' (Adjust this if your prefix is different!)
+    // If they just type "1" or "abc", it blocks them immediately.
+    if (!trackingId.toUpperCase().startsWith('DOC-')) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid format. Please enter a valid Tracking ID (e.g., DOC-XXXX).' 
+      });
+    }
+
+    // 2. SECURE SQL QUERY
+    // Removed "OR id = ?". It now strictly requires the exact reference_no string.
     const sql = `
       SELECT 
         reference_no AS id, 
@@ -94,17 +104,33 @@ app.get('/api/public/track-document/:id', async (req, res) => {
         status, 
         date_filed AS created_at 
       FROM document_requests 
-      WHERE reference_no = ? OR id = ?
+      WHERE reference_no = ?
     `;
     
-    // Pass trackingId twice so they can search by "DOC-2024-001" or just "1"
-    const results = await query(sql, [trackingId, trackingId]);
+    // Pass the trackingId only once now
+    const results = await query(sql, [trackingId]);
 
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: 'Request not found or invalid ID.' });
     }
 
-    res.json({ success: true, request: results[0] });
+    const requestData = results[0];
+
+    // 3. PRIVACY CENSORING FUNCTION
+    // Converts "Jemson Pogi" into "J***** P***"
+    const censorName = (name) => {
+      if (!name) return 'Unknown';
+      return name.split(' ').map(word => {
+        if (word.length <= 1) return word; 
+        // Keep first letter, replace the rest with asterisks
+        return word.charAt(0) + '*'.repeat(word.length - 1);
+      }).join(' ');
+    };
+
+    // Apply the censorship before sending data to the browser
+    requestData.full_name = censorName(requestData.full_name);
+
+    res.json({ success: true, request: requestData });
   } catch (error) {
     console.error('Error tracking document:', error);
     res.status(500).json({ success: false, message: 'Server error while fetching tracking info' });

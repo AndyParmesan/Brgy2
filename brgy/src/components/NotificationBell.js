@@ -144,21 +144,23 @@ export default function NotificationBell({ authToken, onNavigate }) {
   const handleItemClick = (section) => {
     setOpen(false); // Close the dropdown
 
-    // If a specific section string is passed, force the hash route
-    if (section) {
-      if (section === 'document-requests') {
-        window.location.hash = '#document-requests';
-      } else if (section === 'blotter') {
-        window.location.hash = '#blotter-disputes';
-      } else if (section === 'contact') {
-        window.location.hash = '#contact-messages'; // Or whatever your contact hash is
-      } else {
-        window.location.hash = `#${section}`;
-      }
-    }
+    if (onNavigate) {
+      // Translate the notification 'section' into the EXACT string App.js expects
+      let targetTab = 'Dashboard';
 
-    // Call the original onNavigate just in case your parent component needs it to update state
-    if (onNavigate) onNavigate(section);
+      if (section === 'document-requests') {
+        targetTab = 'Document Requests';
+      } else if (section === 'blotter') {
+        targetTab = 'Blotter & Disputes';
+      } else if (section === 'contact') {
+        targetTab = 'Dashboard'; // Or whatever your contact/messages tab is named
+      } else if (section === 'announcement') {
+        targetTab = 'Announcements';
+      }
+
+      // Tell App.js to switch to that exact tab
+      onNavigate(targetTab);
+    }
   };
   
   // ── Styles ──────────────────────────────────────────────────────────────
