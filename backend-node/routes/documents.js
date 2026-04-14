@@ -4,16 +4,48 @@ const { query } = require('../config/database');
 const authRoutes = require('./auth');
 const authenticateToken = authRoutes.authenticateToken;
 const { logActivity } = require('../utils/activityLogger');
+const crypto = require('crypto'); // Built-in Node.js module — no install needed
 
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-   user: 'barangay853kahilomiii@gmail.com', // Replace with your barangay/testing Gmail
-    pass: 'cjxg vsqn tabk cqzs'     // Use an app password for security
+   user: 'barangay853kahilomiii@gmail.com',
+    pass: 'cjxg vsqn tabk cqzs'
   }
 });
+
+/**
+ * Generates a cryptographically secure, collision-safe reference number.
+ *
+ * Format: DOC-{YEAR}-{8 random uppercase alphanumeric chars}
+ * Example: DOC-2026-K4RX92BT
+ *
+ * Uses crypto.randomBytes() (Node.js built-in) — cryptographically secure,
+ * not Math.random() which is predictable.
+ * Loops on the rare chance of a DB collision (practically never happens).
+ */
+async function generateReferenceNumber() {
+  const year = new Date().getFullYear();
+  let referenceNo;
+
+  do {
+    // 6 random bytes → 12 hex chars, slice to 8 for DOC-YEAR-XXXXXXXX format
+    const token = crypto.randomBytes(6).toString('hex').toUpperCase().slice(0, 8);
+    referenceNo = `DOC-${year}-${token}`;
+
+    // Check for collision
+    const existing = await query(
+      'SELECT id FROM document_requests WHERE reference_no = ?',
+      [referenceNo]
+    );
+
+    if (existing.length === 0) break; // Unique — use it
+  } while (true);
+
+  return referenceNo;
+}
 
 // Public: Get document types
 router.get('/public/documents', (req, res) => {
@@ -135,7 +167,7 @@ router.get('/public/documents', (req, res) => {
   res.json(documents);
 });
 
-// Public: Submit document request (can be authenticated or unauthenticated)
+// Public: Submit document request (authenticated or unauthenticated)
 router.post('/public/document-request', async (req, res) => {
   try {
     // Try to get user from token if available
@@ -149,7 +181,7 @@ router.post('/public/document-request', async (req, res) => {
         userEmail = decoded.email;
       }
     } catch (err) {
-      // Token not provided or invalid, continue as public request
+      // Token not provided or invalid — continue as public request
     }
 
     const { requester_name, document_type, purpose, contact_number, email, address, additional_info } = req.body;
@@ -162,14 +194,8 @@ router.post('/public/document-request', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Generate reference number
-    const year = new Date().getFullYear();
-    const countResult = await query(
-      'SELECT COUNT(*) as count FROM document_requests WHERE YEAR(created_at) = ?',
-      [year]
-    );
-    const count = countResult[0].count + 1;
-    const referenceNo = `DOC-${year}-${String(count).padStart(3, '0')}`;
+    // FIX: Replaced sequential counter with secure random reference number
+    const referenceNo = await generateReferenceNumber();
 
     // Insert document request
     const result = await query(
@@ -302,9 +328,8 @@ router.put('/document-requests/:id', authenticateToken, async (req, res) => {
 
     console.log(`✅ Document request ${requestId} updated to ${status} by ${req.user.email}`);
 
-// --- BEGIN NODEMAILER LOGIC ---
+    // --- BEGIN NODEMAILER LOGIC ---
     try {
-      // 1. Fetch the resident's email and details from MySQL (Fixed column names!)
       const emailQuery = await query(
         'SELECT email, requester_name, document_type, reference_no FROM document_requests WHERE id = ?', 
         [requestId]
@@ -312,7 +337,6 @@ router.put('/document-requests/:id', authenticateToken, async (req, res) => {
       
       const reqData = emailQuery[0];
 
-      // 2. If an email exists in the database, send the notification
       if (reqData && reqData.email) {
         const mailOptions = {
           from: '"Barangay 853 Admin" <barangay853kahilomiii@gmail.com>',
@@ -394,4 +418,3 @@ router.get('/document-requests/:id', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
-
