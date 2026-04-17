@@ -109,6 +109,22 @@ router.get('/statistics', authenticateToken, async (req, res) => {
       LIMIT 10
     `);
 
+      // --- NEW: DEMOGRAPHICS & VULNERABLE SECTORS ---
+    // Uses COALESCE to ensure it returns 0 instead of null when the table is empty
+    const demographicsData = await query(`
+      SELECT
+        COALESCE(SUM(CASE WHEN is_pwd = 1 THEN 1 ELSE 0 END), 0) as pwd_count,
+        COALESCE(SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 60 THEN 1 ELSE 0 END), 0) as senior_count,
+        COALESCE(SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) <= 2 THEN 1 ELSE 0 END), 0) as infant_count
+      FROM residents
+    `);
+    
+    const vulnerableSectors = {
+      pwd: demographicsData[0]?.pwd_count || 0,
+      seniors: demographicsData[0]?.senior_count || 0,
+      infants: demographicsData[0]?.infant_count || 0
+    };
+
     res.json({
       overview: {
         totalResidents,
@@ -127,7 +143,8 @@ router.get('/statistics', authenticateToken, async (req, res) => {
         recent: recentBlotters[0]?.count || 0
       },
       residents: {
-        recent: recentResidents[0]?.count || 0
+        recent: recentResidents[0]?.count || 0,
+        vulnerable: vulnerableSectors
       },
       trends: monthlyTrends
     });
