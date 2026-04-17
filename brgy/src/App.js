@@ -1438,7 +1438,26 @@ function AppContent() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedBlotter, setSelectedBlotter] = useState(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [settings, setSettings] = useState(defaultSettings);
+  
+  // 1. NEW: Load settings from localStorage or use defaults
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('system_settings');
+    return saved ? JSON.parse(saved) : defaultSettings;
+  });
+
+  // 2. NEW: Save to localStorage whenever settings change
+  useEffect(() => {
+    localStorage.setItem('system_settings', JSON.stringify(settings));
+  }, [settings]);
+
+  // 3. NEW: Apply Dark Mode to the HTML body
+  useEffect(() => {
+    if (settings.darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [settings.darkMode]);
 
   // Handle session timeout
   const handleSessionTimeout = () => {
@@ -1449,10 +1468,10 @@ function AppContent() {
     window.location.href = '/';
   };
 
-  // Use session timeout hook
-  const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout);
-
+  // 4. NEW: Pass the dynamic timeout setting to the hook
+  const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout, settings.sessionTimeout);
   // Check for existing authentication on mount
+  
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user');

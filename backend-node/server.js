@@ -14,7 +14,7 @@ const contactRoutes = require('./routes/contact');
 const residentRoutes = require('./routes/residents');
 const activityLogRoutes = require('./routes/activityLogs');
 const statisticsRoutes = require('./routes/statistics');
-
+const officialsRoutes = require('./routes/officials');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -48,6 +48,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/officials', officialsRoutes);
 app.use('/api/public', authRoutes); // Register endpoint is in auth routes
 app.use('/uploads', express.static('public/uploads'));
 

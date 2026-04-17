@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { api } from '../api';
 import './PublicPages.css';
 
 const About = () => {
+  // 1. LOGIC & STATE (Must be at the top)
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [officials, setOfficials] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,6 +17,20 @@ const About = () => {
     subject: '',
     message: ''
   });
+
+  // Fetch officials from your new API
+  useEffect(() => {
+    const fetchOfficials = async () => {
+      try {
+        const response = await fetch('/api/officials');
+        const data = await response.json();
+        setOfficials(data);
+      } catch (err) {
+        console.error('Failed to fetch officials:', err);
+      }
+    };
+    fetchOfficials();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,11 +63,15 @@ const About = () => {
     });
   };
 
+  // Helper filters for the dynamic UI
+  const executive = officials.filter(o => o.category === 'Executive');
+  const kagawadsAndSK = officials.filter(o => o.category !== 'Executive');
+
+  // 2. THE UI (The return statement)
   return (
     <div className="public-page">
       <Navigation />
 
-      {/* Page Header */}
       <section className="page-header">
         <div className="container">
           <h1>About Barangay 853</h1>
@@ -59,17 +79,15 @@ const About = () => {
         </div>
       </section>
 
-      {/* About Content */}
       <section className="about-section">
         <div className="container">
-         {/* History Section */}
+          {/* History Section */}
           <div className="about-content">
             <div className="content-text" style={{ width: '100%' }}>
               <h2>Our History</h2>
               <p>Barangay 853 has been serving its community with dedication and commitment for decades. Established as part of Metro Manila's barangay system, we have grown from a small neighborhood into a vibrant community of diverse families and businesses.</p>
               <p>Throughout the years, we have maintained our commitment to providing excellent public service, fostering community development, and ensuring the safety and well-being of all our residents.</p>
             </div>
-            {/* The filler historical image box has been removed! */}
           </div>
 
           {/* Mission & Vision */}
@@ -84,52 +102,44 @@ const About = () => {
             </div>
           </div>
 
-          {/* Barangay Officials */}
+          {/* Barangay Officials (NOW DYNAMIC) */}
           <div className="officials-section">
             <h2>Barangay Officials</h2>
             <p className="section-subtitle">Meet our dedicated leaders serving the community</p>
             
             <div className="officials-grid">
-              <div className="official-card">
-                <div className="official-photo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <div className="avatar-initial" style={{ width: '120px', height: '120px', fontSize: '3rem' }}>R</div>
+              {executive.map(off => (
+                <div key={off.id} className="official-card">
+                  <div className="official-photo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                    {off.image_url ? (
+                      <img src={off.image_url} alt={off.name} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div className="avatar-initial" style={{ width: '120px', height: '120px', fontSize: '3rem' }}>
+                        {off.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <h4>{off.name}</h4>
+                  <p className="position">{off.position}</p>
                 </div>
-                <h4>Hon. Roger Ferrer</h4>
-                <p className="position">Barangay Chairman</p>
-              </div>
-
-              <div className="official-card">
-                <div className="official-photo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <div className="avatar-initial" style={{ width: '120px', height: '120px', fontSize: '3rem' }}>W</div>
-                </div>
-                <h4>Wilfredo Delos Santos</h4>
-                <p className="position">Barangay Secretary</p>
-              </div>
-
-              <div className="official-card">
-                <div className="official-photo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <div className="avatar-initial" style={{ width: '120px', height: '120px', fontSize: '3rem' }}>A</div>
-                </div>
-                <h4>Adey Gregorio</h4>
-                <p className="position">Barangay Treasurer</p>
-              </div>
+              ))}
             </div>
 
             <h3>Barangay Council & SK</h3>
             <div className="kagawads-grid">
-              {[
-                { name: 'Hon. Gemma Blaquera', position: 'Kagawad - Health & Sanitation', initial: 'G' },
-                { name: 'Hon. Merlita Galon', position: 'Kagawad - Services', initial: 'M' },
-                { name: 'Hon. Mica Grace Villaluz', position: 'SK Chairman', initial: 'M' }
-              ].map((official, idx) => (
-                <div key={idx} className="kagawad-card">
+              {kagawadsAndSK.map(off => (
+                <div key={off.id} className="kagawad-card">
                   <div className="kagawad-photo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                     <div className="avatar-initial" style={{ width: '100px', height: '100px', fontSize: '2.5rem' }}>
-                       {official.initial}
-                     </div>
+                    {off.image_url ? (
+                      <img src={off.image_url} alt={off.name} style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div className="avatar-initial" style={{ width: '100px', height: '100px', fontSize: '2.5rem' }}>
+                        {off.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                  <h5>{official.name}</h5>
-                  <p>{official.position}</p>
+                  <h5>{off.name}</h5>
+                  <p>{off.position}</p>
                 </div>
               ))}
             </div>
@@ -274,4 +284,3 @@ const About = () => {
 };
 
 export default About;
-

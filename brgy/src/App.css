@@ -1052,3 +1052,123 @@ input {
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+/* ==========================================================================
+   GLOBAL DARK MODE CONFIGURATION (Unified)
+   ========================================================================== */
+
+/* --- 1. Base Dark Backgrounds --- */
+body.dark-mode,
+body.dark-mode .public-page,
+body.dark-mode .landing-page,
+body.dark-mode .hero-section,
+body.dark-mode .features-section,
+body.dark-mode .setting-card,
+body.dark-mode footer,
+body.dark-mode .site-footer {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* --- 2. Panels, Cards, Modals & Sidebars (Elevated Backgrounds) --- */
+body.dark-mode .panel,
+body.dark-mode .stat-card,
+body.dark-mode .modal,
+body.dark-mode .modal-content,
+body.dark-mode .modal-card,
+body.dark-mode .sidebar,
+body.dark-mode .top-bar,
+body.dark-mode .public-nav,
+body.dark-mode .main-nav,
+body.dark-mode .mv-card,
+body.dark-mode .official-card,
+body.dark-mode .kagawad-card,
+body.dark-mode .contact-info,
+body.dark-mode .contact-form-container,
+body.dark-mode .about-content,
+body.dark-mode .feature-card,
+body.dark-mode .service-card,
+body.dark-mode .news-card,
+body.dark-mode .info-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* Specific Border Adjustments */
+body.dark-mode .sidebar { border-right: 1px solid #334155; }
+body.dark-mode .sidebar-brand,
+body.dark-mode .modal-header,
+body.dark-mode .top-bar,
+body.dark-mode .public-nav,
+body.dark-mode .main-nav { border-bottom: 1px solid #334155; }
+body.dark-mode .modal-actions,
+body.dark-mode footer,
+body.dark-mode .site-footer { border-top: 1px solid #334155; }
+body.dark-mode .table-row { border-bottom-color: #334155; }
+
+/* --- 3. Typography (Forcing Crisp White Text) --- */
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode p,
+body.dark-mode .stat-value,
+body.dark-mode .setting-field span,
+body.dark-mode .form-group label,
+body.dark-mode .section-subtitle,
+body.dark-mode .barangay-name,
+body.dark-mode .modal-close {
+  color: #f8fafc;
+}
+
+/* --- 4. Muted & Subtext (Greys & Slate) --- */
+body.dark-mode .muted,
+body.dark-mode .nav-label,
+body.dark-mode footer {
+  color: #94a3b8;
+}
+
+body.dark-mode .position,
+body.dark-mode .sidebar-nav li,
+body.dark-mode .nav-links a {
+  color: #cbd5e1;
+}
+
+/* --- 5. Interactive Elements & Inputs --- */
+body.dark-mode .sidebar-nav li:hover,
+body.dark-mode .sidebar-nav li.active {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+body.dark-mode .nav-links a:hover {
+  color: #60a5fa;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #334155;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  border-color: #60a5fa;
+  background-color: #1e293b;
+}
+
+/* --- 6. Tables & Misc Fixes --- */
+body.dark-mode .table-row.head {
+  background-color: #0f172a;
+  color: #cbd5e1;
+}
+
+body.dark-mode .info-icon {
+  background: #334155;
+  color: #f8fafc;
+}
