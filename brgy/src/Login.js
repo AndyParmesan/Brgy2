@@ -116,23 +116,30 @@ function Login({ onLogin }) {
   };
 
 const handleRegPhoneChange = (e) => {
-// 1. Remove all non-numeric characters
     let cleaned = e.target.value.replace(/\D/g, '');
     
-    // 2. AUTO-FORCE "09" AT THE START
+    // 1. AUTO-FORCE "09" AT THE START
     if (cleaned.length > 0) {
       if (cleaned[0] !== '0') {
-        cleaned = '09' + cleaned; // If they type '1', it becomes '091'
+        cleaned = '09' + cleaned;
       } else if (cleaned.length > 1 && cleaned[1] !== '9') {
-        cleaned = '09' + cleaned.substring(1); // If they type '08', it forces '098'
+        cleaned = '09' + cleaned.substring(1);
       }
     }
 
-    let formatted = cleaned;
-    // ... the rest of the formatting (length > 4, etc.) stays exactly the same
+    // Limit to 11 raw digits
+    if (cleaned.length > 11) {
+      cleaned = cleaned.slice(0, 11);
+    }
 
-    // Assuming your registration state is called regData and the field is contactNumber.
-    // If your state is named differently, update 'setRegData' to match!
+    // 2. APPLY 4-3-4 DASH FORMATTING
+    let formatted = cleaned;
+    if (cleaned.length > 7) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+
     setRegData(prev => ({
       ...prev,
       contactNumber: formatted 

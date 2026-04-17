@@ -593,7 +593,6 @@ const navigationItems = [
   },
 ];
 
-const profileAvatar = 'https://i.pravatar.cc/64?img=47';
 
 // Announcement Management Component
 const AnnouncementManagementSection = ({ user, authToken }) => {
@@ -856,9 +855,12 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
                   <button className="ghost-btn" onClick={() => handleEdit(announcement)} style={{ marginRight: '0.5rem' }}>
                     Edit
                   </button>
-                  <button className="ghost-btn" onClick={() => handleDelete(announcement.id)} style={{ color: '#ef4444' }}>
-                    Delete
-                  </button>
+                  {/* NEW: Only Admins can see the Delete button */}
+                  {user?.role === 'admin' && (
+                    <button className="ghost-btn" onClick={() => handleDelete(announcement.id)} style={{ color: '#ef4444' }}>
+                      Delete
+                    </button>
+                    )}
                 </span>
               </div>
             ))
@@ -1663,36 +1665,60 @@ function AppContent() {
         <nav className="sidebar-nav">
           <p className="nav-label">Navigation</p>
           <ul>
-            {navigationItems.map((item) => (
-              <li
-                key={item.label}
-                className={item.label === activeNav ? 'active' : ''}
-                onClick={() => setActiveNav(item.label)}
-              >
-                <span className="nav-icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </li>
-            ))}
+            {navigationItems.map((item) => {
+              // NEW: Hide restricted tabs from staff
+              if ((item.label === 'User Management' || item.label === 'Audit Log') && user?.role !== 'admin') {
+                return null;
+              }
+              
+              return (
+                <li
+                  key={item.label}
+                  className={item.label === activeNav ? 'active' : ''}
+                  onClick={() => setActiveNav(item.label)}
+                >
+                  <span className="nav-icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>
-
-      <main className="main-panel">
+<main className="main-panel">
         <header className="top-bar">
           
           <GlobalSearch authToken={authToken} />
 
           <div className="header-tools">
+            {/* NEW: Back to Home Button */}
+            <button 
+              className="ghost-btn" 
+              onClick={() => navigate('/')} 
+              style={{ marginRight: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              🏠 Home
+            </button>
+            
             <NotificationBell authToken={authToken} onNavigate={setActiveNav} />
+            
             <div className="profile-chip">
-              <img
-                src={profileAvatar}
-                alt={user?.name || 'User'}
-                className="avatar-img"
-                loading="lazy"
-              />
+              {/* NEW: Dynamic Avatar or Initial */}
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user?.name || 'User'}
+                  className="avatar-img"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="avatar-initial">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
+              
               <div>
                 <p className="name">{user?.name || 'User'}</p>
                 <p className="role">{user?.role || 'Staff'}</p>
@@ -1708,10 +1734,8 @@ function AppContent() {
             </div>
           </div>
         </header>
-
-
         {activeNav === 'Dashboard' && (
-          <DashboardOverviewSection authToken={authToken} />
+        <DashboardOverviewSection user={user} authToken={authToken} />        
         )}
 
         {activeNav === 'Document Requests' && (
@@ -1731,7 +1755,7 @@ function AppContent() {
         )}
 
         {activeNav === 'Audit Log' && (
-          <AuditLogSection authToken={authToken} />
+          <AuditLogSection user={user} authToken={authToken} /> 
         )}
 
         {activeNav === 'Settings' && (
@@ -1783,7 +1807,7 @@ function AppContent() {
         )}
 
         {activeNav === 'Resident Management' && (
-          <ResidentManagementSection authToken={authToken} />
+          <ResidentManagementSection user={user} authToken={authToken} /> 
         )}
       </main>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const DashboardOverviewSection = ({ authToken }) => {
+const DashboardOverviewSection = ({ user, authToken }) => { 
   const [stats, setStats] = useState(null);
   const [recentDocs, setRecentDocs] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
@@ -40,7 +40,14 @@ const DashboardOverviewSection = ({ authToken }) => {
       }
 
       // Fetch activity logs
-      const logsResponse = await fetch('/api/activity-logs?limit=20', {
+      // Fetch activity logs
+      // NEW: If the user is staff, only fetch logs where they are the actor
+      let logsUrl = '/api/activity-logs?limit=20';
+      if (user && user.role !== 'admin') {
+        logsUrl += `&actor=${encodeURIComponent(user.name)}`;
+      }
+
+      const logsResponse = await fetch(logsUrl, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',

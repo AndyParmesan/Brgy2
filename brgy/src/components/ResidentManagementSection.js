@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const ResidentManagementSection = ({ authToken }) => {
+const ResidentManagementSection = ({ user, authToken }) => {
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
   
   // State for the photo modal
   const [selectedResident, setSelectedResident] = useState(null);
@@ -98,28 +99,35 @@ const ResidentManagementSection = ({ authToken }) => {
   };
 
 const handleAdminPhoneChange = (e) => {
-// 1. Remove all non-numeric characters
     let cleaned = e.target.value.replace(/\D/g, '');
     
-    // 2. AUTO-FORCE "09" AT THE START
+    // 1. AUTO-FORCE "09" AT THE START
     if (cleaned.length > 0) {
       if (cleaned[0] !== '0') {
-        cleaned = '09' + cleaned; // If they type '1', it becomes '091'
+        cleaned = '09' + cleaned; 
       } else if (cleaned.length > 1 && cleaned[1] !== '9') {
-        cleaned = '09' + cleaned.substring(1); // If they type '08', it forces '098'
+        cleaned = '09' + cleaned.substring(1); 
       }
     }
 
-    let formatted = cleaned;
-    // ... the rest of the formatting (length > 4, etc.) stays exactly the same
+    // Limit to 11 raw digits
+    if (cleaned.length > 11) {
+      cleaned = cleaned.slice(0, 11);
+    }
 
-    // Assuming your state for the new resident is called 'newResident' 
-    // and the field is 'contact_mobile'. Change these if they are named differently!
+    // 2. APPLY 4-3-4 DASH FORMATTING
+    let formatted = cleaned;
+    if (cleaned.length > 7) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
+    } else if (cleaned.length > 4) {
+      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+    }
+
     setFormData(prev => ({
-          ...prev,
-          contact_mobile: formatted 
-        }));
-      };
+      ...prev,
+      contact_mobile: formatted 
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -287,9 +295,13 @@ const handleAdminPhoneChange = (e) => {
                   <button className="ghost-btn" onClick={() => setSelectedResident(resident)} style={{ color: '#3b82f6', marginRight: '0.5rem' }}>
                     📷 Photo
                   </button>
-                  <button className="ghost-btn" onClick={() => handleDelete(resident.id)} style={{ color: '#ef4444' }}>
-                    Delete
-                  </button>
+                  
+                  {/* NEW: Only Admins can see the Delete button */}
+                  {user?.role === 'admin' && (
+                    <button className="ghost-btn" onClick={() => handleDelete(resident.id)} style={{ color: '#ef4444' }}>
+                      Delete
+                    </button>
+                  )}
                 </span>
                 
               </div>

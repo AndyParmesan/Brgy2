@@ -108,25 +108,29 @@
 
 .avatar-upload-btn {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: -10px; /* Adjust so it sits slightly below the image */
+  left: 50%; /* Center it */
+  transform: translateX(-50%); /* Center it perfectly */
   background: #667eea;
   color: white;
   border: 3px solid white;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  border-radius: 20px; /* Make it a pill shape instead of a circle */
+  padding: 0.25rem 0.75rem; /* Add padding for the text */
+  font-size: 0.75rem; /* Make the text smaller */
+  font-weight: 600;
   display: flex;
   align-items: center;
+  gap: 0.25rem; /* Space between icon and text */
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap; /* Stop text from wrapping */
 }
 
 .avatar-upload-btn:hover {
   background: #5568d3;
-  transform: scale(1.1);
+  transform: translateX(-50%) scale(1.05); /* Keep it centered when scaling */
 }
 
 .avatar-info {
