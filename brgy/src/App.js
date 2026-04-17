@@ -20,6 +20,7 @@ import DashboardOverviewSection from './components/DashboardOverviewSection';
 import AuditLogSection from './components/AuditLogSection';
 import NotificationBell from './components/NotificationBell';
 import GlobalSearch from './components/GlobalSearch'; 
+import OfficialsManagementSection from './components/OfficialsManagementSection';
 
 
 const quickActions = [
@@ -556,6 +557,17 @@ const navigationItems = [
         <path d="M4 10v4" />
         <path d="M6 8h6l5-3v14l-5-3H6z" />
         <path d="M10 17v3" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Manage Officials',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>
     ),
   },
@@ -1471,7 +1483,7 @@ function AppContent() {
   // 4. NEW: Pass the dynamic timeout setting to the hook
   const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout, settings.sessionTimeout);
   // Check for existing authentication on mount
-  
+
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user');
@@ -1767,6 +1779,10 @@ function AppContent() {
 
         {activeNav === 'Announcements' && (
           <AnnouncementManagementSection user={user} authToken={authToken} />
+        )}
+        
+        {activeNav === 'Manage Officials' && (
+       <OfficialsManagementSection authToken={authToken} />
         )}
 
         {activeNav === 'Reports & Statistics' && (
