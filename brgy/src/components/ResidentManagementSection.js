@@ -11,8 +11,10 @@ const ResidentManagementSection = ({ user, authToken }) => {
 
   // State for the photo modal
   const [selectedResident, setSelectedResident] = useState(null);
+  
+  // NEW: State to track if we are editing an existing resident
+  const [editingId, setEditingId] = useState(null);
 
-  // FIX 1: Initial state now includes the new household and PWD fields
   const [formData, setFormData] = useState({
     full_name: '',
     contact_email: '',
@@ -54,13 +56,10 @@ const ResidentManagementSection = ({ user, authToken }) => {
     }
   };
 
-  // FIX 2: Split useEffects so we don't accidentally re-fetch the entire table endlessly
-  // 1. Fetch the whole table when search term changes
   useEffect(() => {
     fetchResidents();
   }, [searchTerm, authToken]);
 
-  // 2. Fetch only the family tree when a specific profile is clicked
   useEffect(() => {
     if (selectedResident && selectedResident.household_id) {
       fetch(`/api/residents/${selectedResident.id}/household`, {
@@ -103,6 +102,7 @@ const ResidentManagementSection = ({ user, authToken }) => {
   };
 
   const handleCreate = () => {
+    setEditingId(null); // Ensure we are in "Create" mode
     setFormData({
       full_name: '',
       contact_email: '',
@@ -115,6 +115,37 @@ const ResidentManagementSection = ({ user, authToken }) => {
       household_id: '',
       relationship_to_head: 'Head',
       is_pwd: false
+    });
+    setError('');
+    setShowCreateModal(true);
+  };
+
+  // NEW: Function to load existing data into the form for editing
+  const handleEditClick = (resident) => {
+    setEditingId(resident.id);
+    
+    // Format the date properly for the HTML input
+    let formattedDate = '';
+    if (resident.date_of_birth) {
+      try {
+        formattedDate = new Date(resident.date_of_birth).toISOString().split('T')[0];
+      } catch (e) {
+        formattedDate = '';
+      }
+    }
+
+    setFormData({
+      full_name: resident.full_name || '',
+      contact_email: resident.contact_email || '',
+      contact_mobile: resident.contact_mobile || '',
+      address: resident.address || '',
+      zone: resident.zone || '',
+      date_of_birth: formattedDate,
+      gender: resident.gender || '',
+      occupation: resident.occupation || '',
+      household_id: resident.household_id || '',
+      relationship_to_head: resident.relationship_to_head || 'Head',
+      is_pwd: resident.is_pwd === 1 || resident.is_pwd === true
     });
     setError('');
     setShowCreateModal(true);
@@ -148,6 +179,7 @@ const ResidentManagementSection = ({ user, authToken }) => {
     }));
   };
 
+  // UPDATED: Now handles both Creating (POST) and Updating (PUT)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -159,9 +191,13 @@ const ResidentManagementSection = ({ user, authToken }) => {
       return;
     }
 
+    // Determine if we are creating a new user or updating an existing one
+    const url = editingId ? `/api/residents/${editingId}` : '/api/residents';
+    const method = editingId ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch('/api/residents', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -173,55 +209,21 @@ const ResidentManagementSection = ({ user, authToken }) => {
 
       if (response.ok) {
         setShowCreateModal(false);
+        setEditingId(null);
         setFormData({
-          full_name: '',
-          contact_email: '',
-          contact_mobile: '',
-          address: '',
-          zone: '',
-          date_of_birth: '',
-          gender: '',
-          occupation: '',
-          household_id: '',
-          relationship_to_head: 'Head',
-          is_pwd: false
+          full_name: '', contact_email: '', contact_mobile: '', address: '',
+          zone: '', date_of_birth: '', gender: '', occupation: '',
+          household_id: '', relationship_to_head: 'Head', is_pwd: false
         });
         fetchResidents();
-        alert('Resident created successfully!');
+        alert(editingId ? 'Resident updated successfully!' : 'Resident created successfully!');
       } else {
-        setError(data.message || data.error || 'Failed to create resident');
+        setError(data.message || data.error || 'Failed to save resident');
       }
     } catch (err) {
-      setError(err.message || 'Failed to create resident. Please check your connection and try again.');
+      setError(err.message || 'Failed to save resident. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resident? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/residents/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        fetchResidents();
-        alert('Resident deleted successfully!');
-      } else {
-        const data = await response.json();
-        alert(data.message || 'Failed to delete resident');
-      }
-    } catch (err) {
-      alert('Failed to delete resident. Please try again.');
-      console.error('Error deleting resident:', err);
     }
   };
 
@@ -312,11 +314,10 @@ const ResidentManagementSection = ({ user, authToken }) => {
                   <button className="ghost-btn" onClick={() => setSelectedResident(resident)} style={{ color: '#3b82f6', marginRight: '0.5rem' }}>
                     📷 Photo
                   </button>
-                  {user?.role === 'admin' && (
-                    <button className="ghost-btn" onClick={() => handleDelete(resident.id)} style={{ color: '#ef4444' }}>
-                      Delete
-                    </button>
-                  )}
+                  {/* CHANGED: Swapped Delete button for Edit button */}
+                  <button className="ghost-btn" onClick={() => handleEditClick(resident)} style={{ color: '#10b981' }}>
+                    Edit
+                  </button>
                 </span>
               </div>
             ))
@@ -364,7 +365,7 @@ const ResidentManagementSection = ({ user, authToken }) => {
                   📷 Upload New Photo
                 </button>
 
-                {/* FIX 3: THE FAMILY TREE SECTION IS NOW OUTSIDE THE BUTTON */}
+                {/* FAMILY TREE SECTION */}
                 {selectedResident.household_id ? (
                   <div style={{ width: '100%', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
                     <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>
@@ -394,20 +395,19 @@ const ResidentManagementSection = ({ user, authToken }) => {
                     <p className="muted" style={{ fontSize: '0.9rem' }}>This resident is not assigned to a Household ID.</p>
                   </div>
                 )}
-                {/* END FAMILY TREE SECTION */}
-
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- CREATE RESIDENT MODAL --- */}
+      {/* --- CREATE / EDIT RESIDENT MODAL --- */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setError(''); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header" style={{ flexShrink: 0 }}>
-              <h3>Add New Resident</h3>
+              {/* Dynamic Title */}
+              <h3>{editingId ? 'Edit Resident' : 'Add New Resident'}</h3>
               <button className="modal-close" onClick={() => { setShowCreateModal(false); setError(''); }}>×</button>
             </div>
             <div style={{ overflowY: 'auto', flex: 1, padding: '0 1.75rem' }}>
@@ -512,7 +512,6 @@ const ResidentManagementSection = ({ user, authToken }) => {
                 </div>
               </div>
               
-              {/* FIX 4: Changed this to 3 columns to line up Gender, PWD, and Occupation! */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Gender</label>
@@ -554,8 +553,9 @@ const ResidentManagementSection = ({ user, authToken }) => {
               <button type="button" className="ghost-btn" onClick={() => { setShowCreateModal(false); setError(''); }}>
                 Cancel
               </button>
+              {/* Dynamic Button Text */}
               <button type="submit" form="resident-form" className="primary-btn" disabled={submitting}>
-                {submitting ? 'Creating...' : 'Create Resident'}
+                {submitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Resident')}
               </button>
             </div>
           </div>
