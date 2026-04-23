@@ -20,8 +20,6 @@ import DashboardOverviewSection from './components/DashboardOverviewSection';
 import AuditLogSection from './components/AuditLogSection';
 import NotificationBell from './components/NotificationBell';
 import GlobalSearch from './components/GlobalSearch'; 
-import OfficialsManagementSection from './components/OfficialsManagementSection';
-import UserManagementSection from './components/UserManagementSection';
 
 
 const quickActions = [
@@ -518,18 +516,6 @@ const navigationItems = [
       </svg>
     ),
   },
-  //{
-      //label: 'System Accounts',
-      //icon: (
-        //<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-          //<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          //<circle cx="9" cy="7" r="4"></circle>
-         // <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          //<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        //</svg>
-      //),
-      //adminOnly: true // Hide this from standard staff!
-    //},
   {
     label: 'Resident Management',
     icon: (
@@ -574,17 +560,6 @@ const navigationItems = [
     ),
   },
   {
-    label: 'Manage Officials',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-    ),
-  },
-  {
     label: 'Reports & Statistics',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -618,6 +593,7 @@ const navigationItems = [
   },
 ];
 
+const profileAvatar = 'https://i.pravatar.cc/64?img=47';
 
 // Announcement Management Component
 const AnnouncementManagementSection = ({ user, authToken }) => {
@@ -880,12 +856,9 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
                   <button className="ghost-btn" onClick={() => handleEdit(announcement)} style={{ marginRight: '0.5rem' }}>
                     Edit
                   </button>
-                  {/* NEW: Only Admins can see the Delete button */}
-                  {user?.role === 'admin' && (
-                    <button className="ghost-btn" onClick={() => handleDelete(announcement.id)} style={{ color: '#ef4444' }}>
-                      Delete
-                    </button>
-                    )}
+                  <button className="ghost-btn" onClick={() => handleDelete(announcement.id)} style={{ color: '#ef4444' }}>
+                    Delete
+                  </button>
                 </span>
               </div>
             ))
@@ -1054,6 +1027,379 @@ const AnnouncementManagementSection = ({ user, authToken }) => {
   );
 };
 
+// User Management Component
+const UserManagementSection = ({ user, authToken }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'staff'
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchUsers = async () => {
+    if (user?.role !== 'admin') {
+      console.log('⚠️ Cannot fetch users: User is not an admin');
+      return;
+    }
+
+    if (!authToken) {
+      console.log('⚠️ Cannot fetch users: No auth token');
+      setError('Authentication token missing. Please log in again.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (roleFilter !== 'all') params.append('role', roleFilter);
+
+      const url = `/api/auth/users?${params}`;
+      console.log('📡 Fetching users from:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 Response status:', response.status, response.statusText);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Users loaded successfully:', data);
+        setUsers(Array.isArray(data) ? data : []);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.message || errorData.error || `Failed to load users (Status: ${response.status})`;
+        setError(errorMsg);
+        console.error('❌ Failed to load users:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+      }
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to load users. Please check your connection.';
+      setError(errorMsg);
+      console.error('Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role === 'admin' && authToken) {
+      fetchUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authToken]);
+
+  useEffect(() => {
+    if (user?.role === 'admin' && authToken) {
+      const timeoutId = setTimeout(() => {
+        fetchUsers();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, roleFilter]);
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    // Validation
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      setError('Please fill in all required fields.');
+      setSubmitting(false);
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const url = '/api/auth/create-user';
+      console.log('\n📡 ===== Creating User =====');
+      console.log('   URL:', url);
+      console.log('   Method: POST');
+      console.log('   Body:', { name: newUser.name, email: newUser.email, role: newUser.role });
+      console.log('   Token:', authToken ? authToken.substring(0, 20) + '...' : 'MISSING');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      console.log('   Response status:', response.status, response.statusText);
+      console.log('   Response URL:', response.url);
+      console.log('=============================\n');
+
+      let data;
+      try {
+        data = await response.json();
+        console.log('   Response data:', data);
+      } catch (parseError) {
+        console.error('❌ Failed to parse response:', parseError);
+        const text = await response.text();
+        console.error('   Response text:', text);
+        setError(`Server error: ${response.status} ${response.statusText}. Response: ${text.substring(0, 100)}`);
+        setSubmitting(false);
+        return;
+      }
+
+      if (response.ok) {
+        setShowCreateModal(false);
+        setNewUser({ name: '', email: '', password: '', role: 'staff' });
+        setError(''); // Clear any previous errors
+        // Refresh users list immediately
+        await fetchUsers();
+        alert('User created successfully!');
+      } else {
+        // Show detailed error message
+        const errorMsg = data.message || data.error || 'Failed to create user';
+        setError(errorMsg);
+        console.error('Create user error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data
+        });
+      }
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to create user. Please check your connection and try again.';
+      setError(errorMsg);
+      console.error('Error creating user:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/auth/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        fetchUsers();
+        alert('User deleted successfully!');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      alert('Failed to delete user. Please try again.');
+      console.error('Error deleting user:', err);
+    }
+  };
+
+  if (user?.role !== 'admin') {
+    return (
+      <section className="panel">
+        <header className="panel-heading">
+          <div>
+            <h2>Access Denied</h2>
+            <p className="muted">Only administrators can access user management.</p>
+          </div>
+        </header>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel">
+      <header className="panel-heading">
+        <div>
+          <h2>User Management</h2>
+          <p className="muted">Create and manage staff accounts and administrators.</p>
+        </div>
+        <button 
+          className="primary-btn compact" 
+          onClick={() => setShowCreateModal(true)}
+        >
+          + Create User
+        </button>
+      </header>
+
+      {error && (
+        <div className="error-message" style={{ margin: '1rem', padding: '1rem', background: '#fee2e2', color: '#991b1b', borderRadius: '0.5rem' }}>
+          {error}
+        </div>
+      )}
+
+      <div className="resident-filters" style={{ marginTop: '1.5rem' }}>
+        <div className="filter-field">
+          <label htmlFor="user-search">Search users</label>
+          <input
+            id="user-search"
+            type="search"
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="filter-field">
+          <label htmlFor="role-filter">Role</label>
+          <select
+            id="role-filter"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="all">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="staff">Staff</option>
+            <option value="resident">Resident</option>
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading users...</div>
+      ) : (
+        <div className="table" style={{ marginTop: '1.5rem' }}>
+          <div className="table-row head">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span>Created</span>
+            <span>Action</span>
+          </div>
+          {users.length === 0 ? (
+            <div className="table-row">
+              <span colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                {searchTerm || roleFilter !== 'all' ? 'No users found matching your filters' : 'No users found. Create your first user!'}
+              </span>
+            </div>
+          ) : (
+            users.map((u) => (
+              <div key={u.id} className="table-row">
+                <span>{u.name}</span>
+                <span>{u.email}</span>
+                <span>
+                  <span className={`status-badge ${u.role === 'admin' ? 'status-approved' : u.role === 'staff' ? 'status-pending' : 'status-default'}`}>
+                    {u.role}
+                  </span>
+                </span>
+                <span>{new Date(u.created_at).toLocaleDateString()}</span>
+                <span>
+                  {u.id !== user.id && (
+                    <button 
+                      className="ghost-btn" 
+                      onClick={() => handleDeleteUser(u.id)}
+                      style={{ color: '#ef4444' }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setError(''); }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Create New User</h3>
+              <button className="modal-close" onClick={() => { setShowCreateModal(false); setError(''); }} style={{ background: 'none', border: 'none', fontSize: '2rem', cursor: 'pointer' }}>×</button>
+            </div>
+            {error && (
+              <div className="error-message" style={{ margin: '1rem', padding: '1rem', background: '#fee2e2', color: '#991b1b', borderRadius: '0.5rem' }}>
+                {error}
+              </div>
+            )}
+            <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label>Name *</label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  required
+                  placeholder="Full name"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  required
+                  placeholder="user@example.com"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Password *</label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  required
+                  minLength={6}
+                  placeholder="At least 6 characters"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Role *</label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  required
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="resident">Resident</option>
+                </select>
+              </div>
+              <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" className="ghost-btn" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary-btn" disabled={submitting}>
+                  {submitting ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
 
 const defaultSettings = {
   autoAssignCases: true,
@@ -1090,26 +1436,7 @@ function AppContent() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedBlotter, setSelectedBlotter] = useState(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  
-  // 1. NEW: Load settings from localStorage or use defaults
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('system_settings');
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
-
-  // 2. NEW: Save to localStorage whenever settings change
-  useEffect(() => {
-    localStorage.setItem('system_settings', JSON.stringify(settings));
-  }, [settings]);
-
-  // 3. NEW: Apply Dark Mode to the HTML body
-  useEffect(() => {
-    if (settings.darkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  }, [settings.darkMode]);
+  const [settings, setSettings] = useState(defaultSettings);
 
   // Handle session timeout
   const handleSessionTimeout = () => {
@@ -1120,10 +1447,10 @@ function AppContent() {
     window.location.href = '/';
   };
 
-  // 4. NEW: Pass the dynamic timeout setting to the hook
-  const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout, settings.sessionTimeout);
-  // Check for existing authentication on mount
+  // Use session timeout hook
+  const { showWarning, remainingSeconds, resetTimer } = useSessionTimeout(handleSessionTimeout);
 
+  // Check for existing authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user');
@@ -1336,60 +1663,36 @@ function AppContent() {
         <nav className="sidebar-nav">
           <p className="nav-label">Navigation</p>
           <ul>
-            {navigationItems.map((item) => {
-              // NEW: Hide restricted tabs from staff
-              if ((item.label === 'User Management' || item.label === 'Audit Log') && user?.role !== 'admin') {
-                return null;
-              }
-              
-              return (
-                <li
-                  key={item.label}
-                  className={item.label === activeNav ? 'active' : ''}
-                  onClick={() => setActiveNav(item.label)}
-                >
-                  <span className="nav-icon" aria-hidden="true">
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </li>
-              );
-            })}
+            {navigationItems.map((item) => (
+              <li
+                key={item.label}
+                className={item.label === activeNav ? 'active' : ''}
+                onClick={() => setActiveNav(item.label)}
+              >
+                <span className="nav-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </li>
+            ))}
           </ul>
         </nav>
       </aside>
-<main className="main-panel">
+
+      <main className="main-panel">
         <header className="top-bar">
           
           <GlobalSearch authToken={authToken} />
 
           <div className="header-tools">
-            {/* NEW: Back to Home Button */}
-            <button 
-              className="ghost-btn" 
-              onClick={() => navigate('/')} 
-              style={{ marginRight: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}
-            >
-              🏠 Home
-            </button>
-            
             <NotificationBell authToken={authToken} onNavigate={setActiveNav} />
-            
             <div className="profile-chip">
-              {/* NEW: Dynamic Avatar or Initial */}
-              {user?.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user?.name || 'User'}
-                  className="avatar-img"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="avatar-initial">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-              )}
-              
+              <img
+                src={profileAvatar}
+                alt={user?.name || 'User'}
+                className="avatar-img"
+                loading="lazy"
+              />
               <div>
                 <p className="name">{user?.name || 'User'}</p>
                 <p className="role">{user?.role || 'Staff'}</p>
@@ -1405,8 +1708,10 @@ function AppContent() {
             </div>
           </div>
         </header>
+
+
         {activeNav === 'Dashboard' && (
-        <DashboardOverviewSection user={user} authToken={authToken} />        
+          <DashboardOverviewSection authToken={authToken} />
         )}
 
         {activeNav === 'Document Requests' && (
@@ -1420,17 +1725,13 @@ function AppContent() {
         {activeNav === 'Announcements' && (
           <AnnouncementManagementSection user={user} authToken={authToken} />
         )}
-        
-        {activeNav === 'Manage Officials' && (
-       <OfficialsManagementSection authToken={authToken} />
-        )}
 
         {activeNav === 'Reports & Statistics' && (
           <StatisticsSection authToken={authToken} />
         )}
 
         {activeNav === 'Audit Log' && (
-          <AuditLogSection user={user} authToken={authToken} /> 
+          <AuditLogSection authToken={authToken} />
         )}
 
         {activeNav === 'Settings' && (
@@ -1482,7 +1783,7 @@ function AppContent() {
         )}
 
         {activeNav === 'Resident Management' && (
-          <ResidentManagementSection user={user} authToken={authToken} /> 
+          <ResidentManagementSection authToken={authToken} />
         )}
       </main>
 

@@ -1,54 +1,33 @@
 import React, { useState } from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import './PublicPages.css'; // Assuming this holds your public page styles
+import './PublicPages.css'; // Assuming you use this for public page styling
 
 const TrackRequest = () => {
   const [trackingId, setTrackingId] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-  const [requestData, setRequestData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Smart input handler: auto-uppercase
-  const handleInputChange = (e) => {
-    let value = e.target.value.toUpperCase();
-    // Optional: strip spaces
-    value = value.replace(/\s/g, '');
-    setTrackingId(value);
-    
-    // Clear errors when they start typing again
-    if (error) setError('');
-    if (requestData) setRequestData(null);
-  };
-
-  const handleTrackSubmit = async (e) => {
+  const handleTrack = async (e) => {
     e.preventDefault();
-    if (!trackingId) return;
+    if (!trackingId.trim()) return;
 
     setLoading(true);
     setError('');
-    setRequestData(null);
-
-    // Smart logic: If they just typed numbers like "2024-045", safely append "DOC-"
-    let finalId = trackingId;
-    if (!finalId.startsWith('DOC-')) {
-      finalId = `DOC-${finalId}`;
-    }
+    setResult(null);
 
     try {
-      // Call the secure public tracking route we built in server.js
-      const response = await fetch(`/api/public/track-document/${encodeURIComponent(finalId)}`);
+      // We will create this public API endpoint next
+      const response = await fetch(`/api/public/track-document/${trackingId}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setRequestData(data.request);
-        // Update the input field to show the proper format they just searched
-        setTrackingId(finalId);
+        setResult(data.request);
       } else {
-        setError(data.message || 'Tracking ID not found. Please check your reference number.');
+        setError(data.message || 'Could not find a request with that ID.');
       }
     } catch (err) {
-      console.error('Tracking error:', err);
       setError('Failed to connect to the server. Please try again later.');
     } finally {
       setLoading(false);
@@ -56,103 +35,71 @@ const TrackRequest = () => {
   };
 
   // Helper to color-code the status badge
-  const getStatusClass = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'pending': return 'status-pending';
-      case 'review': return 'status-review';
-      case 'approved': return 'status-approved';
-      case 'ready': return 'status-ready'; // Assuming you have a 'ready for pickup' status
-      default: return 'status-default';
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved': return '#10b981'; // Green
+      case 'pending': return '#f59e0b'; // Yellow
+      case 'rejected': return '#ef4444'; // Red
+      default: return '#6b7280'; // Gray
     }
   };
 
   return (
-    <div className="public-page">
+    <div className="landing-page">
       <Navigation />
-
-      <section className="page-header">
-        <div className="container">
-          <h1>Track Document Request</h1>
-          <p>Check the real-time status of your requested barangay documents</p>
-        </div>
-      </section>
-
-      <section className="track-section" style={{ minHeight: '50vh', padding: '4rem 0' }}>
-        <div className="container" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      
+      <main className="main-content" style={{ minHeight: '60vh', padding: '4rem 2rem', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ maxWidth: '500px', width: '100%', background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#1f2937' }}>Track Document Request</h2>
           
-          <div className="panel" style={{ padding: '2rem' }}>
-            <form onSubmit={handleTrackSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="form-group">
-                <label>Reference Number</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="e.g., DOC-2024-045"
-                    value={trackingId}
-                    onChange={handleInputChange}
-                    style={{ flex: 1, padding: '1rem', fontSize: '1.2rem', textTransform: 'uppercase' }}
-                    required
-                  />
-                  <button 
-                    type="submit" 
-                    className="primary-btn" 
-                    disabled={loading || !trackingId}
-                    style={{ padding: '0 2rem' }}
-                  >
-                    {loading ? 'Searching...' : 'Track'}
-                  </button>
-                </div>
+          <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '2rem' }}>
+            Enter your Request ID below to check the current status of your document.
+          </p>
+
+          <form onSubmit={handleTrack} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <input
+              type="text"
+              placeholder="e.g. 15"
+              value={trackingId}
+              onChange={(e) => setTrackingId(e.target.value)}
+              style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              required
+            />
+            <button 
+              type="submit" 
+              disabled={loading}
+              style={{ padding: '0.75rem 1.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer' }}
+            >
+              {loading ? 'Searching...' : 'Track'}
+            </button>
+          </form>
+
+          {error && (
+            <div style={{ padding: '1rem', background: '#fee2e2', color: '#ef4444', borderRadius: '4px', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+
+          {result && (
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1.5rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ margin: 0 }}>{result.document_type}</h3>
+                <span style={{ 
+                  background: getStatusColor(result.status), 
+                  color: 'white', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.875rem', fontWeight: 'bold', textTransform: 'capitalize' 
+                }}>
+                  {result.status}
+                </span>
               </div>
-            </form>
-
-            {error && (
-              <div className="error-message" style={{ marginTop: '1.5rem', padding: '1rem', background: '#fee2e2', color: '#991b1b', borderRadius: '0.5rem', textAlign: 'center' }}>
-                {error}
-              </div>
-            )}
-
-            {requestData && (
-              <div className="tracking-result" style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', backgroundColor: 'var(--bg-card)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                  <div>
-                    <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Reference ID</p>
-                    <h3 style={{ margin: 0 }}>{requestData.id}</h3>
-                  </div>
-                  <div>
-                    <span className={`status-badge ${getStatusClass(requestData.status)}`} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                      {requestData.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <p className="muted" style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>Requested By</p>
-                    <p style={{ margin: 0, fontWeight: '500' }}>{requestData.full_name}</p>
-                    {/* The name is censored by the backend! (e.g., J***** P***) */}
-                  </div>
-                  <div>
-                    <p className="muted" style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>Document Type</p>
-                    <p style={{ margin: 0, fontWeight: '500' }}>{requestData.document_type}</p>
-                  </div>
-                  <div>
-                    <p className="muted" style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>Purpose</p>
-                    <p style={{ margin: 0, fontWeight: '500' }}>{requestData.purpose}</p>
-                  </div>
-                  <div>
-                    <p className="muted" style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>Date Filed</p>
-                    <p style={{ margin: 0, fontWeight: '500' }}>
-                      {new Date(requestData.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
+              <p style={{ margin: '0.5rem 0', color: '#4b5563' }}><strong>Resident:</strong> {result.full_name}</p>
+              <p style={{ margin: '0.5rem 0', color: '#4b5563' }}><strong>Date Requested:</strong> {new Date(result.created_at).toLocaleDateString()}</p>
+              {result.purpose && (
+                <p style={{ margin: '0.5rem 0', color: '#4b5563' }}><strong>Purpose:</strong> {result.purpose}</p>
+              )}
+            </div>
+          )}
         </div>
-      </section>
+      </main>
 
       <Footer />
     </div>

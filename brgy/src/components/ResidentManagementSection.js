@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
-const ResidentManagementSection = ({ user, authToken }) => {
+const ResidentManagementSection = ({ authToken }) => {
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [householdMembers, setHouseholdMembers] = useState([]);
-
+  
   // State for the photo modal
   const [selectedResident, setSelectedResident] = useState(null);
   
-  // NEW: State to track if we are editing an existing resident
-  const [editingId, setEditingId] = useState(null);
-
   const [formData, setFormData] = useState({
     full_name: '',
     contact_email: '',
@@ -23,15 +19,12 @@ const ResidentManagementSection = ({ user, authToken }) => {
     zone: '',
     date_of_birth: '',
     gender: '',
-    occupation: '',
-    household_id: '',
-    relationship_to_head: 'Head',
-    is_pwd: false
+    occupation: ''
   });
 
   const handlePhotoUpload = async (residentId, file) => {
     if (!file) return;
-
+    
     const uploadData = new FormData();
     uploadData.append('photo', file);
 
@@ -40,13 +33,14 @@ const ResidentManagementSection = ({ user, authToken }) => {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`
+          // Note: Do NOT set Content-Type here. Browser sets it automatically for FormData!
         },
         body: uploadData,
       });
 
       if (response.ok) {
         alert('Photo uploaded successfully!');
-        fetchResidents();
+        fetchResidents(); // Refresh the table to show the new picture
       } else {
         alert('Failed to upload photo.');
       }
@@ -58,20 +52,7 @@ const ResidentManagementSection = ({ user, authToken }) => {
 
   useEffect(() => {
     fetchResidents();
-  }, [searchTerm, authToken]);
-
-  useEffect(() => {
-    if (selectedResident && selectedResident.household_id) {
-      fetch(`/api/residents/${selectedResident.id}/household`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      })
-      .then(res => res.json())
-      .then(data => setHouseholdMembers(data))
-      .catch(err => console.error("Failed to load family:", err));
-    } else {
-      setHouseholdMembers([]);
-    }
-  }, [selectedResident, authToken]);
+  }, [searchTerm]);
 
   const fetchResidents = async () => {
     setLoading(true);
@@ -102,7 +83,6 @@ const ResidentManagementSection = ({ user, authToken }) => {
   };
 
   const handleCreate = () => {
-    setEditingId(null); // Ensure we are in "Create" mode
     setFormData({
       full_name: '',
       contact_email: '',
@@ -111,93 +91,51 @@ const ResidentManagementSection = ({ user, authToken }) => {
       zone: '',
       date_of_birth: '',
       gender: '',
-      occupation: '',
-      household_id: '',
-      relationship_to_head: 'Head',
-      is_pwd: false
+      occupation: ''
     });
     setError('');
     setShowCreateModal(true);
   };
 
-  // NEW: Function to load existing data into the form for editing
-  const handleEditClick = (resident) => {
-    setEditingId(resident.id);
-    
-    // Format the date properly for the HTML input
-    let formattedDate = '';
-    if (resident.date_of_birth) {
-      try {
-        formattedDate = new Date(resident.date_of_birth).toISOString().split('T')[0];
-      } catch (e) {
-        formattedDate = '';
-      }
-    }
-
-    setFormData({
-      full_name: resident.full_name || '',
-      contact_email: resident.contact_email || '',
-      contact_mobile: resident.contact_mobile || '',
-      address: resident.address || '',
-      zone: resident.zone || '',
-      date_of_birth: formattedDate,
-      gender: resident.gender || '',
-      occupation: resident.occupation || '',
-      household_id: resident.household_id || '',
-      relationship_to_head: resident.relationship_to_head || 'Head',
-      is_pwd: resident.is_pwd === 1 || resident.is_pwd === true
-    });
-    setError('');
-    setShowCreateModal(true);
-  };
-
-  const handleAdminPhoneChange = (e) => {
+const handleAdminPhoneChange = (e) => {
+// 1. Remove all non-numeric characters
     let cleaned = e.target.value.replace(/\D/g, '');
-
+    
+    // 2. AUTO-FORCE "09" AT THE START
     if (cleaned.length > 0) {
       if (cleaned[0] !== '0') {
-        cleaned = '09' + cleaned;
+        cleaned = '09' + cleaned; // If they type '1', it becomes '091'
       } else if (cleaned.length > 1 && cleaned[1] !== '9') {
-        cleaned = '09' + cleaned.substring(1);
+        cleaned = '09' + cleaned.substring(1); // If they type '08', it forces '098'
       }
-    }
-
-    if (cleaned.length > 11) {
-      cleaned = cleaned.slice(0, 11);
     }
 
     let formatted = cleaned;
-    if (cleaned.length > 7) {
-      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
-    } else if (cleaned.length > 4) {
-      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
-    }
+    // ... the rest of the formatting (length > 4, etc.) stays exactly the same
 
+    // Assuming your state for the new resident is called 'newResident' 
+    // and the field is 'contact_mobile'. Change these if they are named differently!
     setFormData(prev => ({
-      ...prev,
-      contact_mobile: formatted
-    }));
-  };
+          ...prev,
+          contact_mobile: formatted 
+        }));
+      };
 
-  // UPDATED: Now handles both Creating (POST) and Updating (PUT)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
 
+    // Validation
     if (!formData.full_name || !formData.contact_mobile || !formData.address) {
       setError('Full name, contact mobile, and address are required.');
       setSubmitting(false);
       return;
     }
 
-    // Determine if we are creating a new user or updating an existing one
-    const url = editingId ? `/api/residents/${editingId}` : '/api/residents';
-    const method = editingId ? 'PUT' : 'POST';
-
     try {
-      const response = await fetch(url, {
-        method: method,
+      const response = await fetch('/api/residents', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -209,24 +147,58 @@ const ResidentManagementSection = ({ user, authToken }) => {
 
       if (response.ok) {
         setShowCreateModal(false);
-        setEditingId(null);
         setFormData({
-          full_name: '', contact_email: '', contact_mobile: '', address: '',
-          zone: '', date_of_birth: '', gender: '', occupation: '',
-          household_id: '', relationship_to_head: 'Head', is_pwd: false
+          full_name: '',
+          contact_email: '',
+          contact_mobile: '',
+          address: '',
+          zone: '',
+          date_of_birth: '',
+          gender: '',
+          occupation: ''
         });
         fetchResidents();
-        alert(editingId ? 'Resident updated successfully!' : 'Resident created successfully!');
+        alert('Resident created successfully!');
       } else {
-        setError(data.message || data.error || 'Failed to save resident');
+        const errorMessage = data.message || data.error || 'Failed to create resident';
+        setError(errorMessage);
       }
     } catch (err) {
-      setError(err.message || 'Failed to save resident. Please check your connection and try again.');
+      const errorMessage = err.message || 'Failed to create resident. Please check your connection and try again.';
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this resident? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/residents/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        fetchResidents();
+        alert('Resident deleted successfully!');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete resident');
+      }
+    } catch (err) {
+      alert('Failed to delete resident. Please try again.');
+      console.error('Error deleting resident:', err);
+    }
+  };
+
+  // Calculate stats
   const stats = {
     total: residents.length,
     withEmail: residents.filter(r => r.contact_email).length,
@@ -309,16 +281,17 @@ const ResidentManagementSection = ({ user, authToken }) => {
                 <span>{resident.contact_email || 'N/A'}</span>
                 <span>{resident.address ? resident.address.substring(0, 30) + '...' : 'N/A'}</span>
                 <span>{resident.zone || 'N/A'}</span>
-
+                
+                {/* BUTTONS SAFELY INSIDE THE TABLE ROW */}
                 <span>
                   <button className="ghost-btn" onClick={() => setSelectedResident(resident)} style={{ color: '#3b82f6', marginRight: '0.5rem' }}>
                     📷 Photo
                   </button>
-                  {/* CHANGED: Swapped Delete button for Edit button */}
-                  <button className="ghost-btn" onClick={() => handleEditClick(resident)} style={{ color: '#10b981' }}>
-                    Edit
+                  <button className="ghost-btn" onClick={() => handleDelete(resident.id)} style={{ color: '#ef4444' }}>
+                    Delete
                   </button>
                 </span>
+                
               </div>
             ))
           )}
@@ -333,81 +306,49 @@ const ResidentManagementSection = ({ user, authToken }) => {
               <h3>Resident Profile</h3>
               <button className="modal-close" onClick={() => setSelectedResident(null)}>×</button>
             </div>
-
+            
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem' }}>
-              <img
-                src={selectedResident.photo_url ? `http://127.0.0.1:3001/uploads/${selectedResident.photo_url}` : 'https://via.placeholder.com/150?text=No+Photo'}
-                alt="Resident Profile"
+              <img 
+                src={selectedResident.photo_url ? `http://127.0.0.1:3001/uploads/${selectedResident.photo_url}` : 'https://via.placeholder.com/150?text=No+Photo'} 
+                alt="Resident Profile" 
                 style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
               />
-
-              <div style={{ textAlign: 'center', width: '100%' }}>
+              
+              <div style={{ textAlign: 'center' }}>
                 <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>{selectedResident.full_name}</h4>
                 <p style={{ margin: '0 0 1.5rem 0', color: '#64748b' }}>{selectedResident.address}</p>
-
-                <input
-                  type="file"
-                  id={`photo-upload-${selectedResident.id}`}
-                  style={{ display: 'none' }}
+                
+                <input 
+                  type="file" 
+                  id={`photo-upload-${selectedResident.id}`} 
+                  style={{ display: 'none' }} 
                   accept="image/*"
                   onChange={(e) => {
                     if(e.target.files && e.target.files[0]) {
                       handlePhotoUpload(selectedResident.id, e.target.files[0]);
-                      setSelectedResident(null);
+                      setSelectedResident(null); // Close modal after upload starts
                     }
                   }}
                 />
-                <button
-                  className="primary-btn"
+                <button 
+                  className="primary-btn" 
                   onClick={() => document.getElementById(`photo-upload-${selectedResident.id}`).click()}
                   style={{ width: '100%' }}
                 >
                   📷 Upload New Photo
                 </button>
-
-                {/* FAMILY TREE SECTION */}
-                {selectedResident.household_id ? (
-                  <div style={{ width: '100%', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>
-                      Household Members (ID: {selectedResident.household_id})
-                    </h4>
-                    {householdMembers.length > 0 ? (
-                      <div className="table" style={{ fontSize: '0.9rem' }}>
-                        <div className="table-row head" style={{ padding: '0.75rem', gridTemplateColumns: '2fr 1fr 1fr' }}>
-                          <span>Name</span>
-                          <span>Relationship</span>
-                          <span>Contact</span>
-                        </div>
-                        {householdMembers.map(member => (
-                          <div key={member.id} className="table-row" style={{ padding: '0.75rem', gridTemplateColumns: '2fr 1fr 1fr' }}>
-                            <span><strong>{member.full_name}</strong></span>
-                            <span><span className="status-badge" style={{ background: '#e0f2fe', color: '#0369a1' }}>{member.relationship_to_head}</span></span>
-                            <span>{member.contact_mobile || 'N/A'}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="muted" style={{ textAlign: 'center', fontSize: '0.9rem' }}>No other registered members in this household.</p>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ width: '100%', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem', textAlign: 'center' }}>
-                    <p className="muted" style={{ fontSize: '0.9rem' }}>This resident is not assigned to a Household ID.</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- CREATE / EDIT RESIDENT MODAL --- */}
+      {/* --- CREATE RESIDENT MODAL --- */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setError(''); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header" style={{ flexShrink: 0 }}>
-              {/* Dynamic Title */}
-              <h3>{editingId ? 'Edit Resident' : 'Add New Resident'}</h3>
+              <h3>Add New Resident</h3>
               <button className="modal-close" onClick={() => { setShowCreateModal(false); setError(''); }}>×</button>
             </div>
             <div style={{ overflowY: 'auto', flex: 1, padding: '0 1.75rem' }}>
@@ -432,14 +373,14 @@ const ResidentManagementSection = ({ user, authToken }) => {
                 <div className="form-group">
                   <label>Contact Mobile *</label>
                   <input
-                    type="tel"
-                    value={formData.contact_mobile}
-                    onChange={handleAdminPhoneChange}
-                    placeholder="09XX-XXX-XXXX"
-                    pattern="^09\d{2}-\d{3}-\d{4}$"
-                    title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
-                    required
-                  />
+                  type="tel"
+                  value={formData.contact_mobile}
+                  onChange={handleAdminPhoneChange} /* <-- Use the new function */
+                  placeholder="09XX-XXX-XXXX"
+                  pattern="^09\d{2}-\d{3}-\d{4}$" /* <-- Strict validation */
+                  title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
+                  required
+                />
                 </div>
                 <div className="form-group">
                   <label>Contact Email</label>
@@ -463,33 +404,6 @@ const ResidentManagementSection = ({ user, authToken }) => {
                   style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem', fontFamily: 'inherit' }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                <div className="form-group">
-                  <label>Household ID (e.g., HH-001)</label>
-                  <input
-                    type="text"
-                    value={formData.household_id}
-                    onChange={(e) => setFormData({ ...formData, household_id: e.target.value })}
-                    placeholder="Leave blank if unknown"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Relationship to Head</label>
-                  <select
-                    value={formData.relationship_to_head}
-                    onChange={(e) => setFormData({ ...formData, relationship_to_head: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d5d8f0', borderRadius: '0.5rem' }}
-                  >
-                    <option value="Head">Head of Family</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Child">Child</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Sibling">Sibling</option>
-                    <option value="Other">Other Extended</option>
-                  </select>
-                </div>
-              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Zone</label>
@@ -511,8 +425,7 @@ const ResidentManagementSection = ({ user, authToken }) => {
                   />
                 </div>
               </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Gender</label>
                   <select
@@ -525,16 +438,6 @@ const ResidentManagementSection = ({ user, authToken }) => {
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
-                </div>
-                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '1.5rem' }}>
-                  <input
-                    type="checkbox"
-                    id="is_pwd"
-                    checked={formData.is_pwd}
-                    onChange={(e) => setFormData({ ...formData, is_pwd: e.target.checked })}
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                  <label htmlFor="is_pwd" style={{ margin: 0, fontWeight: 'bold' }}>Register as PWD</label>
                 </div>
                 <div className="form-group">
                   <label>Occupation</label>
@@ -553,9 +456,8 @@ const ResidentManagementSection = ({ user, authToken }) => {
               <button type="button" className="ghost-btn" onClick={() => { setShowCreateModal(false); setError(''); }}>
                 Cancel
               </button>
-              {/* Dynamic Button Text */}
               <button type="submit" form="resident-form" className="primary-btn" disabled={submitting}>
-                {submitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Resident')}
+                {submitting ? 'Creating...' : 'Create Resident'}
               </button>
             </div>
           </div>

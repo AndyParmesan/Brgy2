@@ -1,60 +1,131 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-// NEW: Added timeoutSetting parameter (defaults to 30m)
-export const useSessionTimeout = (onTimeout, timeoutSetting = '30m') => {
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const WARNING_BEFORE_MS = 15 * 60 * 1000; // 15 minutes before timeout
+
+/**
+ * Custom hook to manage session timeout based on user activity
+ * @param {Function} onTimeout - Callback when session times out
+ */
+export const useSessionTimeout = (onTimeout) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(60);
+  const [remainingSeconds, setRemainingSeconds] = useState(WARNING_BEFORE_MS / 1000);
+  
+  const timeoutRef = useRef(null);
+  const warningRef = useRef(null);
+  const countdownRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
 
-  // Convert string to actual milliseconds
-  const getTimeoutMs = (setting) => {
-    if (setting === '15m') return 15 * 60 * 1000;
-    if (setting === '1h') return 60 * 60 * 1000;
-    return 30 * 60 * 1000; // Default 30m
-  };
-
-  const resetTimer = useCallback(() => {
-    setShowWarning(false);
-    localStorage.setItem('last_activity', Date.now().toString());
+  const clearAllTimers = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (warningRef.current) clearTimeout(warningRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
-  useEffect(() => {
-    let interval;
-    const checkActivity = () => {
-      const lastActivity = parseInt(localStorage.getItem('last_activity') || Date.now());
-      const timeoutMs = getTimeoutMs(timeoutSetting); 
-      const warningThreshold = 60 * 1000; // 1 minute warning
-      
-      const timePassed = Date.now() - lastActivity;
-      const timeLeft = timeoutMs - timePassed;
+  const resetTimer = useCallback(() => {
+    clearAllTimers();
+    setShowWarning(false);
+    setRemainingSeconds(WARNING_BEFORE_MS / 1000);
 
-      if (timeLeft <= 0) {
+    lastActivityRef.current = Date.now();
+    localStorage.setItem('last_activity', lastActivityRef.current.toString());
+
+    // 1. Set the timer to trigger the warning
+    warningRef.current = setTimeout(() => {
+      setShowWarning(true);
+      
+      // Start countdown for the UI
+      countdownRef.current = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+    }, IDLE_TIMEOUT_MS - WARNING_BEFORE_MS);
+
+    // 2. Set the actual hard timeout
+    timeoutRef.current = setTimeout(() => {
+      clearAllTimers();
+      setShowWarning(false);
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('last_activity');
+      
+      if (onTimeout) {
         onTimeout();
-      } else if (timeLeft <= warningThreshold) {
-        setShowWarning(true);
-        setRemainingSeconds(Math.ceil(timeLeft / 1000));
-      } else {
-        setShowWarning(false);
+      }
+    }, IDLE_TIMEOUT_MS);
+  }, [onTimeout, clearAllTimers]);
+
+  const checkExistingSession = useCallback(() => {
+    const lastActivity = localStorage.getItem('last_activity');
+    const token = localStorage.getItem('auth_token');
+
+    if (!token) return false;
+
+    if (!lastActivity) {
+      lastActivityRef.current = Date.now();
+      localStorage.setItem('last_activity', lastActivityRef.current.toString());
+      resetTimer();
+      return true;
+    }
+
+    const lastActivityTime = parseInt(lastActivity, 10);
+    const timeSinceLastActivity = Date.now() - lastActivityTime;
+
+    if (timeSinceLastActivity >= IDLE_TIMEOUT_MS) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('last_activity');
+      if (onTimeout) onTimeout();
+      return false;
+    }
+
+    lastActivityRef.current = lastActivityTime;
+    resetTimer();
+    return true;
+  }, [resetTimer, onTimeout]);
+
+  useEffect(() => {
+    const isValid = checkExistingSession();
+    if (!isValid) return;
+
+    // Track user activity events to reset timers
+    // Note: If the warning is already showing, we don't auto-reset on scroll/mousemove 
+    // to force the user to click the "Continue Session" button so they are explicitly aware.
+    const events = ['mousedown', 'keypress', 'touchstart', 'click'];
+    
+    const handleActivity = () => {
+      // Auto-reset ONLY if the warning banner isn't currently up
+      if (!showWarning) {
+        resetTimer();
       }
     };
 
-    const handleActivity = () => localStorage.setItem('last_activity', Date.now().toString());
-    
-    // Listen for any user activity
-    window.addEventListener('mousemove', handleActivity);
-    window.addEventListener('keydown', handleActivity);
-    window.addEventListener('click', handleActivity);
-    window.addEventListener('scroll', handleActivity);
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
 
-    interval = setInterval(checkActivity, 1000);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkExistingSession();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener('mousemove', handleActivity);
-      window.removeEventListener('keydown', handleActivity);
-      window.removeEventListener('click', handleActivity);
-      window.removeEventListener('scroll', handleActivity);
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity);
+      });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearAllTimers();
     };
-  }, [onTimeout, timeoutSetting]); // Re-run if setting changes
+  }, [resetTimer, checkExistingSession, showWarning, clearAllTimers]);
 
   return { showWarning, remainingSeconds, resetTimer };
 };

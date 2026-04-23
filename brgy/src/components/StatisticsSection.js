@@ -121,32 +121,6 @@ const StatisticsSection = ({ authToken }) => {
           </article>
         </div>
       </section>
-      {/* VULNERABLE SECTORS (NEW DEMOGRAPHICS DASHBOARD) */}
-      <section className="panel reports-module print-panel">
-        <header className="panel-heading">
-          <div>
-            <h2>Demographics: Vulnerable Sectors</h2>
-            <p className="muted">Automatically categorized for relief operations & emergency response</p>
-          </div>
-        </header>
-        <div className="reports-grid" style={{ marginTop: '1.5rem' }}>
-          <article className="report-card" style={{ borderTop: '4px solid #8b5cf6', background: '#f5f3ff' }}>
-            <p className="stat-label" style={{ color: '#6d28d9' }}>Senior Citizens (60+)</p>
-            <p className="stat-value" style={{ color: '#4c1d95' }}>{stats.residents.vulnerable?.seniors || 0}</p>
-            <p className="muted">Calculated from birthdate</p>
-          </article>
-          <article className="report-card" style={{ borderTop: '4px solid #ec4899', background: '#fdf2f8' }}>
-            <p className="stat-label" style={{ color: '#be185d' }}>Infants (0-2 yrs)</p>
-            <p className="stat-value" style={{ color: '#831843' }}>{stats.residents.vulnerable?.infants || 0}</p>
-            <p className="muted">Calculated from birthdate</p>
-          </article>
-          <article className="report-card" style={{ borderTop: '4px solid #f59e0b', background: '#fffbeb' }}>
-            <p className="stat-label" style={{ color: '#b45309' }}>Registered PWDs</p>
-            <p className="stat-value" style={{ color: '#78350f' }}>{stats.residents.vulnerable?.pwd || 0}</p>
-            <p className="muted">Documented in system</p>
-          </article>
-        </div>
-      </section>
 
       {/* DOCUMENT REQUESTS CHARTS */}
       <section className="panel print-panel">

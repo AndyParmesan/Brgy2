@@ -50,8 +50,7 @@ const UserProfile = ({ user: propUser, onUserUpdate }) => {
         setFormData({
           name: userData.name || '',
           email: userData.email || '',
-          // 👇 Wrap the phone data in our cleaner!
-          phone: formatSavedPhone(userData.phone || ''), 
+          phone: userData.phone || '',
           address: userData.address || '',
           bio: userData.bio || '',
           avatar_url: userData.avatar_url || ''
@@ -76,49 +75,6 @@ const UserProfile = ({ user: propUser, onUserUpdate }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
-    setSuccess('');
-  };
-
-// 1. Instantly fix bad dashes from the database when the profile loads
-  const formatSavedPhone = (phoneStr) => {
-    if (!phoneStr) return '';
-    let cleaned = phoneStr.replace(/\D/g, ''); 
-    if (cleaned.length > 7) {
-      return cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
-    } else if (cleaned.length > 4) {
-      return cleaned.slice(0, 4) + '-' + cleaned.slice(4);
-    }
-    return phoneStr;
-  };
-
-  // 2. Strict formatting while the user is typing
-  const handlePhoneChange = (e) => {
-    let cleaned = e.target.value.replace(/\D/g, '');
-    
-    // Auto-force "09"
-    if (cleaned.length > 0) {
-      if (cleaned[0] !== '0') {
-        cleaned = '09' + cleaned;
-      } else if (cleaned.length > 1 && cleaned[1] !== '9') {
-        cleaned = '09' + cleaned.substring(1);
-      }
-    }
-
-    // Limit to 11 raw digits
-    if (cleaned.length > 11) {
-      cleaned = cleaned.slice(0, 11);
-    }
-
-    // 4-3-4 Dash Grouping
-    let formatted = cleaned;
-    if (cleaned.length > 7) {
-      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 7) + '-' + cleaned.slice(7, 11);
-    } else if (cleaned.length > 4) {
-      formatted = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
-    }
-
-    setFormData(prev => ({ ...prev, phone: formatted }));
     setError('');
     setSuccess('');
   };
@@ -331,11 +287,12 @@ const UserProfile = ({ user: propUser, onUserUpdate }) => {
                   {getInitials()}
                 </div>
               )}
-              <label htmlFor="avatar-upload" className="avatar-upload-btn" title="Change Photo">
+              <label htmlFor="avatar-upload" className="avatar-upload-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                   <circle cx="12" cy="13" r="4"></circle>
                 </svg>
+                Change Photo
               </label>
               <input
                 type="file"
@@ -408,13 +365,11 @@ const UserProfile = ({ user: propUser, onUserUpdate }) => {
                 id="phone"
                 name="phone"
                 value={formData.phone}
-                onChange={handlePhoneChange} /* <-- Use new function */
-                placeholder="09XX-XXX-XXXX" /* <-- Update placeholder */
-                pattern="^09\d{2}-\d{3}-\d{4}$" /* <-- Strict validation */
-                title="Phone number must start with 09 and follow the format 09XX-XXX-XXXX"
-                maxLength={13}
+                onChange={handleInputChange}
+                placeholder="Enter your phone number"
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="address">Address</label>
               <textarea

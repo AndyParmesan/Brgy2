@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -15,7 +14,7 @@ const contactRoutes = require('./routes/contact');
 const residentRoutes = require('./routes/residents');
 const activityLogRoutes = require('./routes/activityLogs');
 const statisticsRoutes = require('./routes/statistics');
-const officialsRoutes = require('./routes/officials');
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,11 +24,9 @@ app.use(cors({
   origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 }));
-
 // Increase body size limit to handle base64 image uploads (50MB)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Request logging - MUST be before routes
 app.use((req, res, next) => {
@@ -51,7 +48,6 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/officials', officialsRoutes);
 app.use('/api/public', authRoutes); // Register endpoint is in auth routes
 app.use('/uploads', express.static('public/uploads'));
 
